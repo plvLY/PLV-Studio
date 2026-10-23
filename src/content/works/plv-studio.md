@@ -6,11 +6,11 @@ status: "in-progress"
 cover: "/images/works/plv-studio/cover.png"
 icon: "/logo.png"
 startedAt: "2026-10-01"
-updatedAt: "2026-10-23"
+updatedAt: "2026-10-24"
 techStack: ["Astro", "Tailwind CSS v4", "TypeScript", "Netlify"]
 published: true
 featured: true
-demoUrl: ""
+demoUrl: "https://plvstudio.netlify.app"
 sourceUrl: ""
 videoUrl: ""
 ---
@@ -42,7 +42,7 @@ videoUrl: ""
 
 ## 5. 当前状态与限制
 
-处于开发实现阶段：核心页面与视觉系统已完成，响应式验收与部署上线进行中。演示截图、视频等阶段产物待补充后展示，外部链接不存在时不显示空按钮。
+站点已上线，当前处于试运行测试阶段：核心页面与视觉系统完成，2026-10-24 经 Netlify 部署至 https://plvstudio.netlify.app 并进入测试验收。作品介绍附真实运行截图，详情提供在线演示入口；外部链接不存在时不显示空按钮。
 
 ## 6. 阶段产物
 

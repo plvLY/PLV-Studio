@@ -69,6 +69,7 @@
 
 ## 部署
 
+- **已上线**：https://plvstudio.netlify.app （2026-10-24 部署）。
 - Netlify 构建：`npm run build` → 发布 `dist/`，Node 22（见 `netlify.toml`）。
-- `astro.config.mjs` 的 `site` 目前为占位域名，**部署后回填实际域名**（影响 canonical / OG 元信息）。
-- 作品上线后可在 frontmatter 补 `demoUrl` / `sourceUrl` / `videoUrl`，详情页会自动展示对应入口。
+- `astro.config.mjs` 的 `site` 已配置为正式域名 `https://plvstudio.netlify.app`（影响 canonical / OG 元信息）。
+- 作品 frontmatter 的 `demoUrl` / `sourceUrl` / `videoUrl` 存在时，详情页自动展示对应入口；不存在则不渲染空按钮。

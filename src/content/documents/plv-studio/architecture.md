@@ -2,7 +2,7 @@
 title: "技术架构"
 type: "architecture"
 version: "v1.0"
-updatedAt: "2026-10-23"
+updatedAt: "2026-10-24"
 summary: "技术选型理由、系统分层、设计令牌体系、路由渲染与构建部署方案"
 ---
 
@@ -72,9 +72,9 @@ summary: "技术选型理由、系统分层、设计令牌体系、路由渲染�
 - `npm run build`：`astro build` 生成纯静态产物到 `dist/`（当前 7 个路由 + 404 页）。
 - `npm run check`：`@astrojs/check` 全站类型检查，作为变更前的验证门槛。
 - Netlify：`netlify.toml` 指定构建命令与产物目录，`NODE_VERSION = 22`；`package.json` 的 `engines` 要求 Node ≥ 22.22，保证本地与构建环境一致。
+- 正式域名：`site` 配置为 `https://plvstudio.netlify.app`，canonical / OG 元信息按此生成绝对地址。
+- 上线状态：2026-10-24 部署至 Netlify 并发布，站点可访问。
 
 ## 6. 已知限制
 
-- **部署域名未确认**：`astro.config.mjs` 中 `site` 为占位值，影响 canonical / OG 的绝对地址生成，待实际部署后回填。
-- **无自动化测试**：测试验收仍为规划中阶段，当前依赖人工验收清单（响应式、链接、无障碍）。
-- **阶段产物缺失**：截图与演示视频待补充；缺失时对应模块与入口不渲染，不显示空按钮或无效链接。
+- **无自动化测试**：测试验收处于试运行阶段，依赖人工验收清单（响应式、链接、无障碍）。

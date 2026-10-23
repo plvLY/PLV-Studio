@@ -3,7 +3,7 @@ import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  site: 'https://plv-studio.netlify.app', // TODO: 若实际域名不同，请同步修改（影响 canonical / OG / sitemap）
+  site: 'https://plvstudio.netlify.app', // 站点正式域名（canonical / OG 绝对地址按此生成）
   trailingSlash: 'always',
   server: { 
     port: 4321, 
