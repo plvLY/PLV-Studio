@@ -1,0 +1,27 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="页面未找到" description="访问的页面不存在 - PLV Studio">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
+    <p class="text-6xl font-bold text-primary mb-4">404</p>
+    <h1 class="text-2xl font-bold text-text-primary mb-2">页面未找到</h1>
+    <p class="text-text-secondary mb-8">
+      你访问的页面可能已被移动或不存在。
+    </p>
+    <div class="flex flex-wrap justify-center gap-3">
+      <a
+        href="/"
+        class="px-5 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
+      >
+        返回首页
+      </a>
+      <a
+        href="/works/"
+        class="px-5 py-2.5 border border-border text-text-primary rounded-lg font-medium hover:bg-surface-muted transition-colors"
+      >
+        浏览作品
+      </a>
+    </div>
+  </div>
+</Layout>

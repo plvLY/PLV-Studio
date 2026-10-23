@@ -1,0 +1,113 @@
+---
+import Layout from "../../../../layouts/Layout.astro";
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import { sortByLifecycle, docTypeLabel } from "../../../../lib/documents";
+
+interface Props {
+  entry: CollectionEntry<"documents">;
+}
+
+export async function getStaticPaths() {
+  const entries = await getCollection("documents");
+  return entries.map((entry) => {
+    const [workSlug, docId] = entry.id.split("/");
+    return { params: { slug: workSlug, doc: docId }, props: { entry } };
+  });
+}
+
+const { entry } = Astro.props;
+const [slug, docId] = entry.id.split("/");
+const docEntry = { docId, ...entry.data };
+const { Content } = await render(entry);
+
+const workEntries = await getCollection("works");
+const workEntry = workEntries.find((w) => w.id === slug);
+const work = workEntry ? { slug, ...workEntry.data } : undefined;
+
+const docEntries = await getCollection("documents", ({ id }) => id.startsWith(`${slug}/`));
+// 侧栏"同作品文档"与列表页、详情页使用同一排序（开发节点顺序）
+const workDocs = sortByLifecycle(docEntries.map((d) => ({ docId: d.id.split("/")[1], ...d.data })));
+---
+
+<Layout title={docEntry.title} description={docEntry.summary}>
+  <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-6" aria-label="面包屑导航">
+    <ol class="breadcrumbs flex items-center gap-2 text-sm text-text-secondary">
+      <li><a href="/" class="hover:text-primary transition-colors">首页</a></li>
+      <li aria-hidden="true">/</li>
+      <li><a href="/works/" class="hover:text-primary transition-colors">作品</a></li>
+      <li aria-hidden="true">/</li>
+      <li><a href={`/works/${slug}/`} class="hover:text-primary transition-colors">{work?.title}</a></li>
+      <li aria-hidden="true">/</li>
+      <li><a href={`/works/${slug}/documents/`} class="hover:text-primary transition-colors">设计文档</a></li>
+      <li aria-hidden="true">/</li>
+      <li class="text-text-primary" aria-current="page">{docEntry.title}</li>
+    </ol>
+  </nav>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+    <div class="lg:grid lg:grid-cols-3 lg:gap-8">
+      <!-- 主内容区：文档正文 -->
+      <article class="lg:col-span-2 space-y-8">
+        <header class="mb-6">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+            <div>
+              <h1 class="text-3xl font-bold text-text-primary">
+                {docEntry.title}
+              </h1>
+              <p class="text-text-secondary">{docEntry.summary}</p>
+            </div>
+            <div class="flex items-center gap-3 text-xs text-text-secondary">
+              <span class="bg-surface-muted px-2 py-1 rounded">
+                类型：{docTypeLabel(docEntry.type)}
+              </span>
+              <span class="bg-surface-muted px-2 py-1 rounded">
+                版本：{docEntry.version}
+              </span>
+              <span class="bg-surface-muted px-2 py-1 rounded">
+                更新：{docEntry.updatedAt}
+              </span>
+            </div>
+          </div>
+        </header>
+
+        <div class="content-body">
+          <Content />
+        </div>
+      </article>
+
+      <!-- 侧栏：返回作品及相关文档 -->
+      <aside class="lg:col-span-1 space-y-6">
+        <div class="bg-surface rounded-xl border border-border p-6 sticky top-24">
+          <h3 class="font-semibold text-text-primary mb-4">返回作品</h3>
+          <a
+            href={`/works/${slug}/`}
+            class="block w-full text-left py-3 px-4 rounded-lg border border-border bg-surface hover:bg-surface-muted hover:text-primary transition-colors"
+          >
+            ← 返回 {work?.title} 作品详情
+          </a>
+        </div>
+
+        <div class="bg-surface rounded-xl border border-border p-6">
+          <h3 class="font-semibold text-text-primary mb-4">同作品文档</h3>
+          <ul class="space-y-3">
+            {workDocs.map((d) => (
+              <li>
+                <a
+                  href={`/works/${slug}/documents/${d.docId}/`}
+                  aria-current={d.docId === docId ? "page" : undefined}
+                  class={`block py-2 px-3 rounded-lg text-sm transition-colors ${
+                    d.docId === docId
+                      ? "bg-primary/10 text-primary border border-primary/20"
+                      : "text-text-secondary hover:text-primary hover:bg-surface-muted"
+                  }`}
+                >
+                  {d.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

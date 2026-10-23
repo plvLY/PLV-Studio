@@ -1,0 +1,102 @@
+---
+import type { CollectionEntry } from "astro:content";
+import WorkStatusBadge from "./WorkStatusBadge.astro";
+import TechStackTags from "./TechStackTags.astro";
+
+interface Props {
+  /** works 集合条目映射为 { slug, ...frontmatter } 后的形状 */
+  work: { slug: string } & CollectionEntry<"works">["data"];
+  variant?: "default" | "featured";
+}
+const { work, variant = "default" } = Astro.props;
+const isFeatured = variant === "featured";
+// 页脚日期采用样品的点分格式：2026-10-23 -> 2026.10.23
+const updatedAtText = work.updatedAt.replaceAll("-", ".");
+---
+
+<article
+  class:list={[
+    "work-card group bg-surface rounded-2xl border border-border overflow-hidden transition",
+    "hover:border-primary/40 hover:shadow-md",
+    isFeatured && "lg:col-span-2 lg:grid lg:grid-cols-2",
+  ]}
+>
+  <!-- 截图区：内嵌圆角置顶，与内容区约 1:1；featured 在大屏转为左半栏 -->
+  <div class:list={["p-2.5", isFeatured && "lg:h-full"]}>
+    <div class:list={["relative", isFeatured && "lg:h-full"]}>
+      {work.cover ? (
+        <img
+          src={work.cover}
+          alt={work.title + " 封面"}
+          class:list={[
+            "w-full aspect-video object-cover rounded-xl transition-opacity duration-300 group-hover:opacity-90",
+            isFeatured && "lg:h-full lg:aspect-auto",
+          ]}
+          loading="lazy"
+        />
+      ) : (
+        <div
+          class="w-full aspect-video rounded-xl bg-surface-muted flex items-center justify-center text-sm text-text-secondary"
+        >
+          无封面
+        </div>
+      )}
+      <!-- 状态徽标叠在截图右上角 -->
+      <div class="absolute top-2.5 right-2.5">
+        <WorkStatusBadge status={work.status} variant="overlay" />
+      </div>
+    </div>
+  </div>
+
+  <!-- 内容区：图标+标题 → 描述 → 技术标签 → 页脚（日期 + 详情入口） -->
+  <div
+    class:list={["px-5 pb-5 pt-1 flex flex-col flex-1", isFeatured && "lg:p-5"]}
+  >
+    <div class="flex items-center gap-2.5 mb-2">
+      {work.icon ? (
+        <img
+          src={work.icon}
+          alt=""
+          class="w-8 h-8 rounded-lg object-cover shrink-0"
+          width="32"
+          height="32"
+        />
+      ) : (
+        <span
+          class="w-8 h-8 rounded-lg bg-surface-muted text-text-secondary flex items-center justify-center text-sm font-semibold shrink-0"
+        >
+          {work.title.slice(0, 1)}
+        </span>
+      )}
+      <h3 class="text-lg font-semibold text-text-primary">{work.title}</h3>
+    </div>
+    <p class="text-sm text-text-secondary line-clamp-2 mb-4 flex-1">{work.summary}</p>
+    <div class="mb-4">
+      <TechStackTags tags={work.techStack.slice(0, 3)} />
+    </div>
+    <div class="flex items-center justify-between text-xs text-text-secondary">
+      <span class="inline-flex items-center gap-1.5">
+        <svg
+          class="w-3.5 h-3.5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        最近更新 {updatedAtText}
+      </span>
+      <a
+        href={`/works/${work.slug}/`}
+        class="text-primary hover:underline font-medium"
+      >
+        查看详情 →
+      </a>
+    </div>
+  </div>
+</article>

@@ -1,0 +1,68 @@
+---
+interface Props {
+  /** 初始是否为暗色（服务端无法得知，由 Layout 的内联脚本在首帧前设置 .dark 类，图标经 dark: 变体自动切换） */
+  dark?: boolean;
+}
+const { dark = false } = Astro.props;
+---
+
+<button
+  id="theme-toggle"
+  class="theme-toggle p-2 rounded-lg text-secondary hover:text-primary dark:hover:text-accent focus:outline-hidden focus:ring-2 focus:ring-primary transition-colors"
+  type="button"
+  aria-label={dark ? "切换到浅色模式" : "切换到暗色模式"}
+  aria-pressed={dark}
+>
+  <svg
+    class="w-5 h-5 sun-icon hidden dark:block"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    aria-hidden="true"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+    />
+  </svg>
+  <svg
+    class="w-5 h-5 moon-icon block dark:hidden"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+    aria-hidden="true"
+  >
+    <path
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+    />
+  </svg>
+</button>
+
+<script>
+  const btn = document.getElementById("theme-toggle");
+
+  function applyTheme(dark: boolean) {
+    document.documentElement.classList.toggle("dark", dark);
+    localStorage.setItem("theme", dark ? "dark" : "light");
+    if (btn) {
+      btn.setAttribute("aria-pressed", String(dark));
+      btn.setAttribute("aria-label", dark ? "切换到浅色模式" : "切换到暗色模式");
+    }
+  }
+
+  // 与 Layout.astro 的内联预置脚本保持同一套判定逻辑
+  btn?.addEventListener("click", () => {
+    applyTheme(!document.documentElement.classList.contains("dark"));
+  });
+</script>
+
+<style>
+  .theme-toggle {
+    cursor: pointer;
+  }
+</style>

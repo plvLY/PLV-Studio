@@ -1,0 +1,34 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { docTypeLabel } from "../lib/documents";
+
+interface Props {
+  /** documents 集合条目的 frontmatter（title/type/version/updatedAt/summary） */
+  doc: CollectionEntry<"documents">["data"];
+  /** 文档 id（文件名，位于作品目录下），如 requirements */
+  docId: string;
+  workSlug: string;
+}
+const { doc, docId, workSlug } = Astro.props;
+// 链接由 slug + docId 推导并统一使用尾斜杠（与 trailingSlash: 'always' 对齐）
+const href = `/works/${workSlug}/documents/${docId}/`;
+---
+
+<div class="document-card p-4 rounded-lg border border-border bg-surface hover:bg-surface-muted transition-colors">
+  <div class="flex justify-between items-start mb-2">
+    <h4 class="text-base font-semibold text-text-primary">{doc.title}</h4>
+    <span class="text-xs font-medium text-primary px-2 py-0.5 rounded bg-primary/10 border border-primary/20">
+      {docTypeLabel(doc.type)}
+    </span>
+  </div>
+  <p class="text-sm text-text-secondary mb-3 line-clamp-2">{doc.summary}</p>
+  <div class="flex items-center justify-between text-xs text-text-secondary">
+    <span>版本：{doc.version} · 更新：{doc.updatedAt}</span>
+    <a
+      href={href}
+      class="text-primary hover:underline font-medium"
+    >
+      阅读文档 →
+    </a>
+  </div>
+</div>

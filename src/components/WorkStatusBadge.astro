@@ -1,0 +1,70 @@
+---
+import type { WorkStatus } from "../types";
+
+interface Props {
+  status: WorkStatus;
+  size?: "sm" | "md";
+  /** soft=彩色浅底（默认，用于文本区域）；overlay=中性胶囊（叠在封面图上） */
+  variant?: "soft" | "overlay";
+}
+const { status = "planned", size = "sm", variant = "soft" } = Astro.props;
+
+// 每种状态附带暗色变体，避免浅色底徽标在暗色模式下刺眼
+const statusMap: Record<WorkStatus, { label: string; dotColor: string; textColor: string; borderColor: string; bgColor: string }> = {
+  planned: {
+    label: "规划中",
+    dotColor: "bg-amber-500",
+    textColor: "text-amber-700 dark:text-amber-300",
+    borderColor: "border-amber-200 dark:border-amber-400/30",
+    bgColor: "bg-amber-50 dark:bg-amber-400/10",
+  },
+  "in-progress": {
+    label: "开发中",
+    dotColor: "bg-blue-500",
+    textColor: "text-blue-700 dark:text-blue-300",
+    borderColor: "border-blue-200 dark:border-blue-400/30",
+    bgColor: "bg-blue-50 dark:bg-blue-400/10",
+  },
+  completed: {
+    label: "已完成",
+    dotColor: "bg-emerald-500",
+    textColor: "text-emerald-700 dark:text-emerald-300",
+    borderColor: "border-emerald-200 dark:border-emerald-400/30",
+    bgColor: "bg-emerald-50 dark:bg-emerald-400/10",
+  },
+  archived: {
+    label: "已归档",
+    dotColor: "bg-slate-400",
+    textColor: "text-slate-600 dark:text-slate-300",
+    borderColor: "border-slate-200 dark:border-slate-400/30",
+    bgColor: "bg-slate-50 dark:bg-slate-400/10",
+  },
+  blocked: {
+    label: "受阻",
+    dotColor: "bg-red-500",
+    textColor: "text-red-700 dark:text-red-300",
+    borderColor: "border-red-200 dark:border-red-400/30",
+    bgColor: "bg-red-50 dark:bg-red-400/10",
+  },
+};
+
+const info = statusMap[status] ?? statusMap.planned;
+const sizeClasses = size === "md" ? "px-3 py-1 text-sm" : "px-2.5 py-0.5 text-xs";
+const overlaySizeClasses = size === "md" ? "px-3 py-1.5 text-sm" : "px-2.5 py-1 text-xs";
+---
+
+{variant === "overlay" ? (
+  <span
+    class={`inline-flex items-center gap-1.5 rounded-full font-medium bg-surface/90 backdrop-blur-sm border border-border/60 text-text-primary shadow-sm ${overlaySizeClasses}`}
+  >
+    <span class={`w-1.5 h-1.5 rounded-full ${info.dotColor}`}></span>
+    {info.label}
+  </span>
+) : (
+  <span
+    class={`inline-flex items-center gap-1.5 rounded font-medium border ${info.textColor} ${info.borderColor} ${info.bgColor} ${sizeClasses}`}
+  >
+    <span class={`w-1.5 h-1.5 rounded-full ${info.dotColor}`}></span>
+    {info.label}
+  </span>
+)}

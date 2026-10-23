@@ -1,0 +1,273 @@
+---
+import Layout from "../layouts/Layout.astro";
+import WorkCard from "../components/WorkCard.astro";
+import WorkStatusBadge from "../components/WorkStatusBadge.astro";
+import { getCollection } from "astro:content";
+import { progress } from "../data/progress";
+import { skillDirections } from "../data/skills";
+
+// works 集合（Content Collections）：entry.id 即 slug（文件名），映射为页面使用的扁平形状
+const works = (await getCollection("works", ({ data }) => data.published)).map((e) => ({
+  slug: e.id,
+  ...e.data,
+}));
+
+const featuredWorks = works.filter((w) => w.featured && w.published);
+
+// 站点速览面板数据：全部来自内容集合与进度数据的实时统计（不硬编码）
+const docCount = (await getCollection("documents")).length;
+const allStages = Object.values(progress).flat();
+const stageCompleted = allStages.filter((e) => e.status === "completed").length;
+const latestUpdate =
+  [...works.map((w) => w.updatedAt), ...allStages.map((e) => e.updatedAt)].sort().at(-1) ?? "";
+
+// 技能卡关联真实作品：按 slug 查找，避免 works[i] 索引硬编码
+const skills = skillDirections.map((dir) => ({
+  ...dir,
+  desc: dir.items.join("、"),
+  tags: dir.items.slice(0, 2),
+  work: works.find((w) => w.slug === dir.workSlug && w.published),
+}));
+
+// 最近开发进度：取每个作品按 updatedAt 排序后的最新一条，再按时间倒序取前 5
+const recentProgress = Object.entries(progress)
+  .map(([slug, entries]) => {
+    const work = works.find((w) => w.slug === slug);
+    const latest = [...entries].sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    )[0];
+    return { work, ...latest };
+  })
+  .filter((p) => p.work?.published)
+  .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+  .slice(0, 5);
+---
+
+<Layout title="首页" description="PLV Studio - 个人作品展示与项目全生命周期记录站点">
+  <!-- 模块二：首屏 Hero -->
+  <section class="relative py-12 lg:py-16 overflow-hidden">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- 双栏：左侧品牌与主张，右侧站点速览（大屏填充右侧空间，数据实时统计） -->
+      <div class="grid gap-10 items-center lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div class="max-w-2xl">
+          <!-- 个人品牌区：白底签名卡片承载横版书法 logo（363×139），浅色/暗色主题下均保持"名片"质感 -->
+          <div class="flex items-center gap-4 mb-5">
+            <div class="bg-white border border-border rounded-xl px-5 py-4 shadow-sm shrink-0">
+              <img
+                src="/plv.png"
+                alt="PLV 飘风 - 个人品牌标识"
+                class="h-14 md:h-16 w-auto"
+                width="363"
+                height="139"
+              />
+            </div>
+            <div>
+              <div class="text-lg font-semibold text-text-primary">PLV Studio</div>
+              <div class="text-sm text-text-secondary">个人作品与技术实践</div>
+            </div>
+          </div>
+          <h1 class="text-3xl lg:text-4xl font-bold text-text-primary mb-4 leading-tight">
+            把想法慢慢做成有价值的产品
+          </h1>
+          <p class="text-base lg:text-lg text-text-secondary mb-6 max-w-2xl leading-relaxed">
+            这里记录我的个人作品、设计文档、开发进度与技术实践。每个作品都配有目标说明、设计资料、实现细节与阶段产物，方便持续维护与回溯。
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <a
+              href="/works/"
+              class="px-5 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
+            >
+              查看作品
+            </a>
+            <a
+              href="/about/"
+              class="px-5 py-2.5 border border-border text-text-primary rounded-lg font-medium hover:bg-surface-muted transition-colors"
+            >
+              了解我
+            </a>
+          </div>
+        </div>
+
+        <!-- 站点速览：数值由内容集合与进度数据实时统计，随内容自动更新 -->
+        <aside class="bg-surface border border-border rounded-xl p-6 shadow-sm">
+          <h2 class="text-sm font-semibold text-text-primary">站点速览</h2>
+          <dl class="mt-4 space-y-3 text-sm">
+            <div class="flex justify-between items-center">
+              <dt class="text-text-secondary">公开作品</dt>
+              <dd class="font-semibold text-text-primary">{works.length} 个</dd>
+            </div>
+            <div class="flex justify-between items-center">
+              <dt class="text-text-secondary">设计文档</dt>
+              <dd class="font-semibold text-text-primary">{docCount} 份</dd>
+            </div>
+            <div class="flex justify-between items-center">
+              <dt class="text-text-secondary">开发阶段</dt>
+              <dd class="font-semibold text-text-primary">{stageCompleted} / {allStages.length} 已完成</dd>
+            </div>
+          </dl>
+          <div class="mt-4 pt-4 border-t border-border text-xs text-text-secondary">
+            最近更新：{latestUpdate}
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- 模块三：精选作品 -->
+  <section class="py-10">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h2 class="text-2xl font-bold text-text-primary">精选作品</h2>
+          <p class="text-text-secondary mt-2">
+            以作品为中心，查看项目目标、设计文档、开发进度与技术实现。
+          </p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {featuredWorks.length > 0 ? (
+          featuredWorks.map((work) => (
+            <WorkCard work={work} variant="featured" />
+          ))
+        ) : (
+          <div class="col-span-full text-center py-20 text-text-secondary">
+            暂无精选作品
+          </div>
+        )}
+        <!-- 仅有一个精选作品时，第三列以入口卡补齐，避免大屏右侧大片留白 -->
+        {featuredWorks.length === 1 && (
+          <div class="flex flex-col justify-between p-6 rounded-xl border border-border bg-surface-muted">
+            <div>
+              <h3 class="text-lg font-semibold text-text-primary">全部作品</h3>
+              <p class="text-sm text-text-secondary mt-2">
+                共 {works.length} 个公开作品，每个作品附设计文档、开发进度与技术实现说明。
+              </p>
+            </div>
+            <a
+              href="/works/"
+              class="mt-6 self-start px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              浏览作品列表 →
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- 模块四：个人技术实力 -->
+  <section class="py-16 bg-surface-muted">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-8">
+        <h2 class="text-2xl font-bold text-text-primary">个人技术实力</h2>
+        <p class="text-text-secondary mt-2">
+          在首页和关于页面展示个人技术能力，并关联真实作品。
+        </p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {skills.map((skill) => (
+          <div class="p-6 rounded-xl border border-border bg-surface hover:bg-surface-muted transition-colors">
+            <h3 class="text-lg font-semibold text-text-primary mb-2">
+              {skill.name}
+            </h3>
+            <p class="text-sm text-text-secondary mb-4">{skill.desc}</p>
+            <div class="flex flex-wrap gap-2 mb-4">
+              {skill.tags.map((t) => (
+                <span class="px-2 py-1 rounded text-xs border border-primary/30 text-primary bg-primary/5">
+                  {t}
+                </span>
+              ))}
+            </div>
+            {skill.work && (
+              <a
+                href={`/works/${skill.work.slug}/`}
+                class="text-sm text-primary hover:underline font-medium"
+              >
+                查看关联作品 →
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 模块五：最近开发进度 -->
+  <section class="py-10">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-8">
+        <h2 class="text-2xl font-bold text-text-primary">最近开发进度</h2>
+        <p class="text-text-secondary mt-2">
+          展示最近更新的真实项目进展。
+        </p>
+      </div>
+      <div class="space-y-4">
+        {recentProgress.length > 0 ? (
+          recentProgress.map((p) => (
+            <div class="p-4 rounded-lg border border-border bg-surface">
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="font-semibold text-text-primary">
+                  {p.work!.title}
+                </h4>
+                <WorkStatusBadge status={p.status} />
+              </div>
+              <p class="text-sm text-text-secondary mb-2">
+                当前阶段：{p.stage} · 最近更新：{p.updatedAt}
+              </p>
+              {p.completedItems.length > 0 && (
+                <p class="text-sm text-text-secondary mb-1">
+                  最近完成：{p.completedItems.join("；")}
+                </p>
+              )}
+              {p.nextSteps.length > 0 && (
+                <p class="text-sm text-text-secondary">
+                  下一步：{p.nextSteps.join("；")}
+                </p>
+              )}
+              <a
+                href={`/works/${p.work!.slug}/`}
+                class="text-xs text-primary hover:underline mt-2 inline-block font-medium"
+              >
+                查看详情 →
+              </a>
+            </div>
+          ))
+        ) : (
+          <div class="text-center py-20 text-text-secondary">暂无开发进度数据</div>
+        )}
+      </div>
+    </div>
+  </section>
+
+  <!-- 模块六：开发理念 -->
+  <section class="py-16 bg-surface-muted">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="mb-8">
+        <h2 class="text-2xl font-bold text-text-primary">开发理念</h2>
+        <p class="text-text-secondary mt-2">
+          通过简洁的流程说明展示个人工程实践。
+        </p>
+      </div>
+      <div class="flex flex-wrap justify-center gap-4 text-sm">
+        {[
+          "需求分析",
+          "产品设计",
+          "技术架构",
+          "开发实现",
+          "测试验收",
+          "发布迭代",
+        ].map((step, i) => (
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-1 rounded bg-surface text-primary border border-border">
+              {step}
+            </span>
+            {i < 5 && <span class="text-text-secondary">→</span>}
+          </div>
+        ))}
+      </div>
+      <p class="mt-6 text-xs text-text-secondary">
+        流程用于表达工作方法，不代表每个项目都必须处于相同阶段。
+      </p>
+    </div>
+  </section>
+</Layout>

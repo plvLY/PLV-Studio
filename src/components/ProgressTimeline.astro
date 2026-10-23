@@ -1,0 +1,66 @@
+---
+import type { ProgressEntry } from "../types";
+
+interface Props {
+  entries: ProgressEntry[];
+}
+const { entries = [] } = Astro.props;
+
+// 与 src/types.ts 的 ProgressStatus 对齐，并对未知状态做兜底（此前 planned 状态会渲染出空白徽标）
+const statusLabel: Record<string, string> = {
+  completed: "已完成",
+  "in-progress": "进行中",
+  planned: "规划中",
+  archived: "已归档",
+  blocked: "阻塞",
+};
+
+const statusColor: Record<string, string> = {
+  completed: "text-success",
+  "in-progress": "text-primary",
+  planned: "text-warning",
+  archived: "text-secondary",
+  blocked: "text-warning",
+};
+---
+
+<section class="progress-timeline">
+  <h2 class="text-lg font-semibold text-text-primary mb-6">开发进度</h2>
+  <div class="space-y-6">
+    {entries.map((entry) => (
+      <div class="group relative pl-8">
+        <div class="absolute left-0 top-2 w-2 h-2 rounded-full bg-border group-hover:bg-primary transition-colors"></div>
+        <div class="absolute left-0 top-3 w-px h-full bg-border hidden md:block"></div>
+        <div class="flex items-center gap-3 mb-2">
+          <h4 class="font-semibold text-text-primary">{entry.stage}</h4>
+          <span class={`px-2 py-0.5 rounded text-xs font-medium border ${statusColor[entry.status] ?? "text-secondary"} border-current`}>
+            {statusLabel[entry.status] ?? "未知"}
+          </span>
+          <span class="ml-auto text-xs text-text-secondary">{entry.updatedAt}</span>
+        </div>
+        {entry.completedItems.length > 0 && (
+          <ul class="text-sm text-text-secondary space-y-1 pl-2">
+            {entry.completedItems.map((item) => (
+              <li class="flex items-center gap-2">
+                <span class="text-success text-xs">✓</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        )}
+        {entry.currentIssues.length > 0 && (
+          <div class="mt-2 text-sm text-warning">
+            <span class="font-semibold">当前问题：</span>
+            {entry.currentIssues.join("；")}
+          </div>
+        )}
+        {entry.nextSteps.length > 0 && (
+          <div class="mt-2 text-sm text-text-secondary">
+            <span class="font-semibold">下一步：</span>
+            {entry.nextSteps.join("；")}
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+</section>
