@@ -28,7 +28,7 @@ const workDocs = sortByLifecycle(docEntries.map((d) => ({ docId: d.id.split("/")
 
 <Layout title={`${work.title} - 设计文档`} description={`${work.title} 的设计文档列表`}>
   <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-6" aria-label="面包屑导航">
-    <ol class="breadcrumbs flex items-center gap-2 text-sm text-text-secondary">
+    <ol class="breadcrumbs flex flex-wrap items-center gap-2 text-sm text-text-secondary">
       <li><a href="/" class="hover:text-primary transition-colors">首页</a></li>
       <li aria-hidden="true">/</li>
       <li><a href="/works/" class="hover:text-primary transition-colors">作品</a></li>
@@ -39,18 +39,20 @@ const workDocs = sortByLifecycle(docEntries.map((d) => ({ docId: d.id.split("/")
     </ol>
   </nav>
 
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-    <PageHeader
-      title="设计文档"
-      subtitle={`查看 ${work.title} 的所有设计文档与技术记录`}
-    />
+  <PageHeader
+    title="设计文档"
+    subtitle={`查看 ${work.title} 的所有设计文档与技术记录`}
+  />
 
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
     {workDocs.length > 0 ? (
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <ul class="max-w-4xl divide-y divide-border border-t border-border">
         {workDocs.map((doc) => (
-          <DocumentCard doc={doc} docId={doc.docId} workSlug={slug} />
+          <li>
+            <DocumentCard doc={doc} docId={doc.docId} workSlug={slug} variant="row" />
+          </li>
         ))}
-      </div>
+      </ul>
     ) : (
       <div class="text-center py-20 text-text-secondary">暂无设计文档</div>
     )}

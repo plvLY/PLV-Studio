@@ -12,7 +12,7 @@ const works = (await getCollection("works", ({ data }) => data.published)).map((
 
 const featuredWorks = works.filter((w) => w.featured && w.published);
 
-// 编码模式流程（AI 编程 + 人力审核的真实工作流）
+// 编码模式流程（AI 编程 + 人工审核的真实工作流）
 const codingSteps = ["AI 生成初稿", "人工审核", "构建与类型检查", "内容真实性核对"];
 
 // 技术主线三卡：核心方向 / 前端模式 / 探索方向
@@ -24,7 +24,7 @@ const mainLines = [
   },
   {
     label: "前端模式",
-    title: "AI 编程 + 人力审核",
+    title: "AI 编程 + 人工审核",
     desc: "前端代码采用 AI 辅助生成、人工审核的编码模式。AI 负责效率，正确性、可维护性与内容真实性由人把关。",
   },
   {
@@ -37,7 +37,7 @@ const mainLines = [
 
 <Layout
   title="关于"
-  description="全栈开发工程师的技术主线：Java 后端专注、AI 编程+人力审核的前端模式与 AI 应用集成探索 - PLV Studio"
+  description="全栈开发工程师的技术主线：Java 后端专注、AI 编程+人工审核的前端模式与 AI 应用集成探索 - PLV Studio"
 >
   <PageHeader
     title="关于"
@@ -49,7 +49,7 @@ const mainLines = [
     <section class="mb-12">
       <h2 class="text-xl font-bold text-text-primary mb-4">个人简介</h2>
       <p class="text-text-secondary leading-relaxed">
-        全栈开发工程师，使用 Java 系列技术栈，专注于后端工程；前端采用 AI 编程 + 人力审核的编码模式，目前持续探索 AI 应用集成。通过 PLV Studio 以作品为中心，把每个项目的目标、设计文档、开发进度与阶段产物组织成可持续维护的内容体系。
+        全栈开发工程师，使用 Java 系列技术栈，专注于后端工程；前端采用 AI 编程 + 人工审核的编码模式，目前持续探索 AI 应用集成。通过 PLV Studio 以作品为中心，把每个项目的目标、设计文档、开发进度与阶段产物组织成可持续维护的内容体系。
       </p>
     </section>
 
@@ -94,7 +94,7 @@ const mainLines = [
       </div>
     </section>
 
-    <!-- 编码模式与工程实践：AI 编程 + 人力审核 -->
+    <!-- 编码模式与工程实践：AI 编程 + 人工审核 -->
     <section class="mb-12">
       <h2 class="text-xl font-bold text-text-primary mb-4">编码模式与工程实践</h2>
       <div class="bg-surface rounded-xl border border-border p-6">
@@ -119,7 +119,7 @@ const mainLines = [
       <h2 class="text-xl font-bold text-text-primary mb-4">代表作品与能力关联</h2>
       <div class="space-y-4">
         {featuredWorks.map((work) => (
-          <div class="flex items-center gap-4 p-4 rounded-lg border border-border bg-surface">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-xl border border-border bg-surface">
             {work.icon ? (
               <img
                 src={work.icon}
@@ -133,14 +133,14 @@ const mainLines = [
                 {work.title.charAt(0)}
               </div>
             )}
-            <div class="flex-1">
-              <h4 class="font-semibold text-text-primary">{work.title}</h4>
-              <p class="text-sm text-text-secondary">{work.summary}</p>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-text-primary">{work.title}</h3>
+              <p class="text-sm text-text-secondary mb-2">{work.summary}</p>
               <TechStackTags tags={work.techStack} />
             </div>
             <a
               href={`/works/${work.slug}/`}
-              class="text-sm text-primary hover:underline font-medium shrink-0"
+              class="text-sm text-primary hover:underline font-medium shrink-0 self-start sm:self-center"
             >
               查看详情 →
             </a>

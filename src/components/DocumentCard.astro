@@ -8,27 +8,46 @@ interface Props {
   /** 文档 id（文件名，位于作品目录下），如 requirements */
   docId: string;
   workSlug: string;
+  /** card=卡片（默认）；row=列表行（文档列表页使用，降低卡片化程度） */
+  variant?: "card" | "row";
 }
-const { doc, docId, workSlug } = Astro.props;
+const { doc, docId, workSlug, variant = "card" } = Astro.props;
 // 链接由 slug + docId 推导并统一使用尾斜杠（与 trailingSlash: 'always' 对齐）
 const href = `/works/${workSlug}/documents/${docId}/`;
 ---
 
-<div class="document-card p-4 rounded-lg border border-border bg-surface hover:bg-surface-muted transition-colors">
-  <div class="flex justify-between items-start mb-2">
-    <h4 class="text-base font-semibold text-text-primary">{doc.title}</h4>
-    <span class="text-xs font-medium text-primary px-2 py-0.5 rounded bg-primary/10 border border-primary/20">
+{variant === "row" ? (
+  <a
+    href={href}
+    class="document-card group flex flex-wrap items-center gap-x-4 gap-y-1 py-4 transition-colors hover:bg-surface-muted/60 rounded-lg px-3 -mx-3"
+  >
+    <h2 class="text-base font-semibold text-text-primary group-hover:text-primary dark:group-hover:text-accent min-w-0">
+      {doc.title}
+    </h2>
+    <span class="text-xs font-medium text-primary px-2 py-0.5 rounded bg-primary/10 border border-primary/20 shrink-0">
       {docTypeLabel(doc.type)}
     </span>
+    <span class="text-xs text-text-secondary ml-auto shrink-0">
+      版本 {doc.version} · 更新 {doc.updatedAt}
+    </span>
+  </a>
+) : (
+  <div class="document-card p-4 rounded-xl border border-border bg-surface hover:border-primary/40 transition-colors">
+    <div class="flex justify-between items-start mb-2 gap-2">
+      <h3 class="text-base font-semibold text-text-primary">{doc.title}</h3>
+      <span class="text-xs font-medium text-primary px-2 py-0.5 rounded bg-primary/10 border border-primary/20 shrink-0">
+        {docTypeLabel(doc.type)}
+      </span>
+    </div>
+    <p class="text-sm text-text-secondary mb-3 line-clamp-2">{doc.summary}</p>
+    <div class="flex items-center justify-between text-xs text-text-secondary gap-2">
+      <span>版本：{doc.version} · 更新：{doc.updatedAt}</span>
+      <a
+        href={href}
+        class="text-primary hover:underline font-medium shrink-0"
+      >
+        阅读文档 →
+      </a>
+    </div>
   </div>
-  <p class="text-sm text-text-secondary mb-3 line-clamp-2">{doc.summary}</p>
-  <div class="flex items-center justify-between text-xs text-text-secondary">
-    <span>版本：{doc.version} · 更新：{doc.updatedAt}</span>
-    <a
-      href={href}
-      class="text-primary hover:underline font-medium"
-    >
-      阅读文档 →
-    </a>
-  </div>
-</div>
+)}

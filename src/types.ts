@@ -4,6 +4,7 @@
 export const WORK_STATUSES = [
   "planned",
   "in-progress",
+  "trial-run",
   "completed",
   "archived",
   "blocked",
@@ -11,7 +12,7 @@ export const WORK_STATUSES = [
 
 export type WorkStatus = (typeof WORK_STATUSES)[number];
 
-// 进度阶段状态与作品状态共用同一枚举（progress.ts 中实际使用 planned/in-progress/completed）
+// 进度阶段状态与作品状态共用同一枚举（progress.ts 中实际使用 planned/in-progress/trial-run/completed）
 export type ProgressStatus = WorkStatus;
 
 export interface ProgressEntry {

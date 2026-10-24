@@ -7,36 +7,40 @@ interface Props {
   /** works 集合条目映射为 { slug, ...frontmatter } 后的形状 */
   work: { slug: string } & CollectionEntry<"works">["data"];
   variant?: "default" | "featured";
+  /** 卡片排布：vertical=封面在上（默认）；horizontal=封面在左、文字在右（少量作品时压低视觉占比） */
+  layout?: "vertical" | "horizontal";
 }
-const { work, variant = "default" } = Astro.props;
+const { work, variant = "default", layout = "vertical" } = Astro.props;
 const isFeatured = variant === "featured";
+const isHorizontal = layout === "horizontal";
 // 页脚日期采用样品的点分格式：2026-10-23 -> 2026.10.23
 const updatedAtText = work.updatedAt.replaceAll("-", ".");
 ---
 
 <article
   class:list={[
-    "work-card group bg-surface rounded-2xl border border-border overflow-hidden transition",
+    "work-card group bg-surface rounded-xl border border-border overflow-hidden transition",
     "hover:border-primary/40 hover:shadow-md",
-    isFeatured && "lg:col-span-2 lg:grid lg:grid-cols-2",
+    isFeatured && "md:col-span-2 md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:items-stretch",
+    isHorizontal && "sm:grid sm:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] sm:items-center",
   ]}
 >
-  <!-- 截图区：内嵌圆角置顶，与内容区约 1:1；featured 在大屏转为左半栏 -->
-  <div class:list={["p-2.5", isFeatured && "lg:h-full"]}>
-    <div class:list={["relative", isFeatured && "lg:h-full"]}>
+  <!-- 截图区：16:9 统一封面比例；featured/horizontal 转为左半栏（保持 16:9 不拉伸） -->
+  <div class:list={["p-2.5", (isFeatured || isHorizontal) && "sm:h-full"]}>
+    <div class:list={["relative", (isFeatured || isHorizontal) && "sm:h-full"]}>
       {work.cover ? (
         <img
           src={work.cover}
           alt={work.title + " 封面"}
           class:list={[
-            "w-full aspect-video object-cover rounded-xl transition-opacity duration-300 group-hover:opacity-90",
-            isFeatured && "lg:h-full lg:aspect-auto",
+            "w-full aspect-video object-cover rounded-lg transition-opacity duration-200 group-hover:opacity-90",
+            isFeatured && "md:h-full",
           ]}
           loading="lazy"
         />
       ) : (
         <div
-          class="w-full aspect-video rounded-xl bg-surface-muted flex items-center justify-center text-sm text-text-secondary"
+          class="w-full aspect-video rounded-lg bg-surface-muted flex items-center justify-center text-sm text-text-secondary"
         >
           无封面
         </div>
@@ -50,7 +54,11 @@ const updatedAtText = work.updatedAt.replaceAll("-", ".");
 
   <!-- 内容区：图标+标题 → 描述 → 技术标签 → 页脚（日期 + 详情入口） -->
   <div
-    class:list={["px-5 pb-5 pt-1 flex flex-col flex-1", isFeatured && "lg:p-5"]}
+    class:list={[
+      "px-5 pb-5 pt-1 flex flex-col flex-1",
+      isFeatured && "md:p-6 md:justify-center",
+      isHorizontal && "sm:p-6 sm:justify-center",
+    ]}
   >
     <div class="flex items-center gap-2.5 mb-2">
       {work.icon ? (

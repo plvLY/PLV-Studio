@@ -10,6 +10,7 @@ const { entries = [] } = Astro.props;
 const statusLabel: Record<string, string> = {
   completed: "已完成",
   "in-progress": "进行中",
+  "trial-run": "试运行",
   planned: "规划中",
   archived: "已归档",
   blocked: "阻塞",
@@ -18,8 +19,9 @@ const statusLabel: Record<string, string> = {
 const statusColor: Record<string, string> = {
   completed: "text-success",
   "in-progress": "text-primary",
+  "trial-run": "text-accent",
   planned: "text-warning",
-  archived: "text-secondary",
+  archived: "text-text-secondary",
   blocked: "text-warning",
 };
 ---
@@ -33,7 +35,7 @@ const statusColor: Record<string, string> = {
         <div class="absolute left-0 top-3 w-px h-full bg-border hidden md:block"></div>
         <div class="flex items-center gap-3 mb-2">
           <h4 class="font-semibold text-text-primary">{entry.stage}</h4>
-          <span class={`px-2 py-0.5 rounded text-xs font-medium border ${statusColor[entry.status] ?? "text-secondary"} border-current`}>
+          <span class={`px-2 py-0.5 rounded text-xs font-medium border ${statusColor[entry.status] ?? "text-text-secondary"} border-current`}>
             {statusLabel[entry.status] ?? "未知"}
           </span>
           <span class="ml-auto text-xs text-text-secondary">{entry.updatedAt}</span>

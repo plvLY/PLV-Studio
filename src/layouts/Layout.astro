@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from "astro:transitions";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import "../styles/global.css";
@@ -20,6 +21,9 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
     <link rel="apple-touch-icon" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
+    <!-- Astro 内置客户端路由：导航时局部交换页面，消除整页重载的白屏/抖动；
+         禁用 JS 时自动回退为普通多页跳转（渐进增强） -->
+    <ClientRouter />
     <title>{title} · PLV Studio</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
@@ -34,9 +38,14 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
     <!-- 首帧前恢复主题，避免暗色模式闪烁（FOUC）；判定逻辑与 ThemeToggle 保持一致 -->
     <script is:inline>
       (function () {
-        var saved = localStorage.getItem('theme');
-        var dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.classList.toggle('dark', dark);
+        function applySavedTheme() {
+          var saved = localStorage.getItem('theme');
+          var dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.classList.toggle('dark', dark);
+        }
+        applySavedTheme();
+        // ClientRouter 局部交换后 <html> 属性会被新页面覆盖，需在绘制前重新套用本地主题
+        document.addEventListener('astro:after-swap', applySavedTheme);
       })();
     </script>
     <!-- Cloudflare Web Analytics：官方 beacon，仅生产构建注入（本地开发流量不计入统计） -->
@@ -60,6 +69,7 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
     <main id="main" class="flex-grow">
       <slot />
     </main>
-    <SiteFooter description={description} />
+    <!-- 页脚使用固定定位语与版权文案，不随页面级 description 变化（SEO description 仍由 <head> 使用） -->
+    <SiteFooter />
   </body>
 </html>

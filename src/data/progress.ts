@@ -1,5 +1,5 @@
 // 进度内容模型（参考需求文档 9.4 进度模型）
-// 状态枚举与 src/types.ts 保持一致：planned | in-progress | completed | archived | blocked
+// 状态枚举与 src/types.ts 保持一致：planned | in-progress | trial-run | completed | archived | blocked
 import type { ProgressEntry } from "../types";
 
 export const progress: Record<string, ProgressEntry[]> = {
@@ -22,17 +22,21 @@ export const progress: Record<string, ProgressEntry[]> = {
     },
     {
       stage: "测试验收",
-      status: "in-progress",
-      updatedAt: "2026-10-24",
-      completedItems: [],
+      status: "completed",
+      updatedAt: "2026-10-25",
+      completedItems: [
+        "站点部署上线并公开可访问",
+        "多尺寸响应式与无障碍验收",
+        "全部路由、外链与静态资源检查",
+      ],
       currentIssues: [],
-      nextSteps: ["多尺寸响应式与无障碍验收", "全部路由、外链与静态资源检查"],
+      nextSteps: [],
     },
     {
       stage: "发布部署",
       status: "completed",
-      updatedAt: "2026-10-24",
-      completedItems: ["Netlify 上线发布：https://plvstudio.netlify.app"],
+      updatedAt: "2026-10-25",
+      completedItems: ["Netlify 上线发布：https://plvstudio.netlify.app", "试运行结束，进入正式运行"],
       currentIssues: [],
       nextSteps: [],
     },

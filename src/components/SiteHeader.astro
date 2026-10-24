@@ -12,7 +12,7 @@ const navItems = [
 const linkBase =
   "nav-link px-3 py-2 rounded-md transition-colors";
 const linkActive = "text-primary dark:text-accent font-semibold bg-primary/10 dark:bg-accent/10";
-const linkIdle = "text-secondary hover:text-primary dark:hover:text-accent";
+const linkIdle = "text-text-secondary hover:text-primary dark:hover:text-accent";
 ---
 
 <header class="site-header sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -21,8 +21,9 @@ const linkIdle = "text-secondary hover:text-primary dark:hover:text-accent";
       <a
         href="/"
         class="flex items-center gap-2 font-bold text-xl text-primary dark:text-accent"
+        transition:persist="site-header-link"
       >
-        <img src="/logo.png" alt="PLV Studio" class="h-8 w-auto" />
+        <img src="/logo.png" alt="PLV Studio" class="h-8 w-auto" width="250" height="250" />
         <span>PLV Studio</span>
       </a>
 
@@ -56,7 +57,7 @@ const linkIdle = "text-secondary hover:text-primary dark:hover:text-accent";
     <div class="md:hidden border-t border-border">
       <button
         id="mobile-menu-btn"
-        class="w-full flex items-center justify-between px-4 py-4 text-secondary hover:text-primary"
+        class="w-full flex items-center justify-between px-4 py-3 text-text-secondary hover:text-primary min-h-11"
         aria-expanded="false"
         aria-controls="mobile-menu"
       >
@@ -73,13 +74,13 @@ const linkIdle = "text-secondary hover:text-primary dark:hover:text-accent";
         {navItems.map((item) => (
           <a
             href={item.href}
-            class={`block px-4 py-2 transition-colors ${isActive(item.href) ? "text-primary dark:text-accent font-semibold bg-surface-muted" : "text-secondary hover:text-primary hover:bg-surface-muted"}`}
+            class={`block px-4 py-3 transition-colors min-h-11 ${isActive(item.href) ? "text-primary dark:text-accent font-semibold bg-surface-muted" : "text-text-secondary hover:text-primary hover:bg-surface-muted"}`}
             aria-current={isActive(item.href) ? "page" : undefined}
           >
             {item.label}
           </a>
         ))}
-        <a href="https://plv.netlify.app/" target="_blank" rel="noopener noreferrer" class="block px-4 py-2 text-secondary hover:text-primary hover:bg-surface-muted transition-colors">
+        <a href="https://plv.netlify.app/" target="_blank" rel="noopener noreferrer" class="block px-4 py-3 text-text-secondary hover:text-primary hover:bg-surface-muted transition-colors min-h-11">
           博客
         </a>
       </nav>
@@ -88,20 +89,36 @@ const linkIdle = "text-secondary hover:text-primary dark:hover:text-accent";
 </header>
 
 <script>
-  const btn = document.getElementById("mobile-menu-btn");
-  const menu = document.getElementById("mobile-menu");
-
+  // ClientRouter 页面交换后脚本不会自动重执行，统一挂到 astro:page-load（首载也会触发）
   function setMenuOpen(open: boolean) {
+    const btn = document.getElementById("mobile-menu-btn");
+    const menu = document.getElementById("mobile-menu");
     menu?.classList.toggle("hidden", !open);
     btn?.setAttribute("aria-expanded", String(open));
   }
 
-  btn?.addEventListener("click", () => {
-    setMenuOpen(menu?.classList.contains("hidden") ?? false);
+  document.addEventListener("astro:page-load", () => {
+    const btn = document.getElementById("mobile-menu-btn");
+    const menu = document.getElementById("mobile-menu");
+
+    btn?.addEventListener("click", () => {
+      setMenuOpen(menu?.classList.contains("hidden") ?? false);
+    });
+
+    // 点击任意菜单项后自动收起
+    menu?.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => setMenuOpen(false));
+    });
   });
 
-  // 点击任意菜单项后自动收起
-  menu?.querySelectorAll("a").forEach((link) => {
-    link.addEventListener("click", () => setMenuOpen(false));
+  // Esc 键关闭移动菜单并把焦点交还给按钮（document 级只挂一次）
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      const menu = document.getElementById("mobile-menu");
+      if (menu && !menu.classList.contains("hidden")) {
+        setMenuOpen(false);
+        document.getElementById("mobile-menu-btn")?.focus();
+      }
+    }
   });
 </script>

@@ -2,11 +2,11 @@
 title: "PLV Studio"
 summary: "个人技术作品集站点，以作品为中心完整呈现项目目标、设计文档、开发进度与技术实现，坚持静态站点与真实内容原则。"
 type: "developer-tool"
-status: "in-progress"
+status: "completed"
 cover: "/images/works/plv-studio/cover.png"
 icon: "/logo.png"
 startedAt: "2026-10-01"
-updatedAt: "2026-10-24"
+updatedAt: "2026-10-25"
 techStack: ["Astro", "Tailwind CSS v4", "TypeScript", "Netlify"]
 published: true
 featured: true
@@ -42,7 +42,7 @@ videoUrl: ""
 
 ## 5. 当前状态与限制
 
-站点已上线，当前处于试运行测试阶段：核心页面与视觉系统完成，2026-10-24 经 Netlify 部署至 https://plvstudio.netlify.app 并进入测试验收。作品介绍附真实运行截图，详情提供在线演示入口；外部链接不存在时不显示空按钮。
+站点建设完毕：2026-10-24 经 Netlify 部署至 https://plvstudio.netlify.app 上线，随后完成多尺寸响应式与无障碍验收、全部路由与静态资源检查，试运行于 2026-10-25 结束，目前处于正式运行状态。作品介绍附真实运行截图，详情提供在线演示入口；外部链接不存在时不显示空按钮。后续以内容维护与小幅迭代为主。
 
 ## 6. 阶段产物
 

@@ -8,7 +8,7 @@ const { dark = false } = Astro.props;
 
 <button
   id="theme-toggle"
-  class="theme-toggle p-2 rounded-lg text-secondary hover:text-primary dark:hover:text-accent focus:outline-hidden focus:ring-2 focus:ring-primary transition-colors"
+  class="theme-toggle p-2.5 rounded-lg text-text-secondary hover:text-primary dark:hover:text-accent focus:outline-hidden focus:ring-2 focus:ring-primary transition-colors min-h-11 min-w-11 inline-flex items-center justify-center"
   type="button"
   aria-label={dark ? "切换到浅色模式" : "切换到暗色模式"}
   aria-pressed={dark}
@@ -44,20 +44,23 @@ const { dark = false } = Astro.props;
 </button>
 
 <script>
-  const btn = document.getElementById("theme-toggle");
-
+  // ClientRouter 页面交换后脚本不会自动重执行，挂到 astro:page-load（首载也会触发）
   function applyTheme(dark: boolean) {
     document.documentElement.classList.toggle("dark", dark);
     localStorage.setItem("theme", dark ? "dark" : "light");
+    const btn = document.getElementById("theme-toggle");
     if (btn) {
       btn.setAttribute("aria-pressed", String(dark));
       btn.setAttribute("aria-label", dark ? "切换到浅色模式" : "切换到暗色模式");
     }
   }
 
-  // 与 Layout.astro 的内联预置脚本保持同一套判定逻辑
-  btn?.addEventListener("click", () => {
-    applyTheme(!document.documentElement.classList.contains("dark"));
+  document.addEventListener("astro:page-load", () => {
+    const btn = document.getElementById("theme-toggle");
+    // 与 Layout.astro 的内联预置脚本保持同一套判定逻辑
+    btn?.addEventListener("click", () => {
+      applyTheme(!document.documentElement.classList.contains("dark"));
+    });
   });
 </script>
 

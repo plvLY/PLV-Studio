@@ -1,7 +1,7 @@
 import type { SkillDirection } from "../types";
 
 // 技术主线（首页"个人技术实力"与关于页"技术方向"共用，避免两处重复维护）：
-// 全栈开发 · Java 系列 · 后端工程专注 · 前端 AI 编程+人力审核 · 持续探索 AI 应用集成
+// 全栈开发 · Java 系列 · 后端工程专注 · 前端 AI 编程+人工审核 · 持续探索 AI 应用集成
 // 前端工具只列本站可证实的技术（Astro / Tailwind），编码模式单列一条
 // workSlug 仅在存在真实对应作品时填写；无对应作品时不显示"查看关联作品"入口
 export const skillDirections: SkillDirection[] = [
@@ -12,7 +12,7 @@ export const skillDirections: SkillDirection[] = [
   },
   {
     name: "前端工程",
-    note: "AI 编程 + 人力审核",
+    note: "AI 编程 + 人工审核",
     items: ["Astro", "Tailwind CSS", "AI 辅助编码", "代码人工审核"],
     workSlug: "plv-studio",
   },

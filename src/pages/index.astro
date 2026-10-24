@@ -29,13 +29,16 @@ const skills = skillDirections.map((dir) => ({
   work: works.find((w) => w.slug === dir.workSlug && w.published),
 }));
 
-// 最近开发进度：取每个作品按 updatedAt 排序后的最新一条，再按时间倒序取前 5
+// 最近开发进度：每个作品优先展示当前活跃阶段（试运行/进行中/受阻），
+// 若全部完成则回退到最近更新的一条；再按时间倒序取前 5
+const isActiveStatus = (s: string) => s === "trial-run" || s === "in-progress" || s === "blocked";
 const recentProgress = Object.entries(progress)
   .map(([slug, entries]) => {
     const work = works.find((w) => w.slug === slug);
-    const latest = [...entries].sort(
+    const sorted = [...entries].sort(
       (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    )[0];
+    );
+    const latest = sorted.find((e) => isActiveStatus(e.status)) ?? sorted[0];
     return { work, ...latest };
   })
   .filter((p) => p.work?.published)
@@ -45,7 +48,7 @@ const recentProgress = Object.entries(progress)
 
 <Layout title="首页" description="PLV Studio - 个人作品展示与项目全生命周期记录站点">
   <!-- 模块二：首屏 Hero -->
-  <section class="relative py-12 lg:py-16 overflow-hidden">
+  <section class="relative py-14 lg:py-20 overflow-hidden">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- 双栏：左侧品牌与主张，右侧站点速览（大屏填充右侧空间，数据实时统计） -->
       <div class="grid gap-10 items-center lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -66,22 +69,22 @@ const recentProgress = Object.entries(progress)
               <div class="text-sm text-text-secondary">个人作品与技术实践</div>
             </div>
           </div>
-          <h1 class="text-3xl lg:text-4xl font-bold text-text-primary mb-4 leading-tight">
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-text-primary mb-4 leading-[1.2] tracking-tight">
             把想法慢慢做成有价值的产品
           </h1>
-          <p class="text-base lg:text-lg text-text-secondary mb-6 max-w-2xl leading-relaxed">
+          <p class="text-base lg:text-lg text-text-secondary mb-7 max-w-2xl leading-relaxed">
             这里记录我的个人作品、设计文档、开发进度与技术实践。每个作品都配有目标说明、设计资料、实现细节与阶段产物，方便持续维护与回溯。
           </p>
           <div class="flex flex-wrap gap-3">
             <a
               href="/works/"
-              class="px-5 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
+              class="inline-flex items-center px-5 py-2.5 min-h-11 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
             >
               查看作品
             </a>
             <a
               href="/about/"
-              class="px-5 py-2.5 border border-border text-text-primary rounded-lg font-medium hover:bg-surface-muted transition-colors"
+              class="inline-flex items-center px-5 py-2.5 min-h-11 border border-border text-text-primary rounded-lg font-medium hover:bg-surface-muted transition-colors"
             >
               了解我
             </a>
@@ -114,17 +117,20 @@ const recentProgress = Object.entries(progress)
   </section>
 
   <!-- 模块三：精选作品 -->
-  <section class="py-10">
+  <section class="py-12 lg:py-16">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between mb-8">
+      <div class="flex items-end justify-between flex-wrap gap-2 mb-8">
         <div>
           <h2 class="text-2xl font-bold text-text-primary">精选作品</h2>
           <p class="text-text-secondary mt-2">
             以作品为中心，查看项目目标、设计文档、开发进度与技术实现。
           </p>
         </div>
+        <a href="/works/" class="text-sm text-primary hover:underline font-medium shrink-0">
+          查看全部作品 →
+        </a>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         {featuredWorks.length > 0 ? (
           featuredWorks.map((work) => (
             <WorkCard work={work} variant="featured" />
@@ -134,46 +140,29 @@ const recentProgress = Object.entries(progress)
             暂无精选作品
           </div>
         )}
-        <!-- 仅有一个精选作品时，第三列以入口卡补齐，避免大屏右侧大片留白 -->
-        {featuredWorks.length === 1 && (
-          <div class="flex flex-col justify-between p-6 rounded-xl border border-border bg-surface-muted">
-            <div>
-              <h3 class="text-lg font-semibold text-text-primary">全部作品</h3>
-              <p class="text-sm text-text-secondary mt-2">
-                共 {works.length} 个公开作品，每个作品附设计文档、开发进度与技术实现说明。
-              </p>
-            </div>
-            <a
-              href="/works/"
-              class="mt-6 self-start px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-            >
-              浏览作品列表 →
-            </a>
-          </div>
-        )}
       </div>
     </div>
   </section>
 
   <!-- 模块四：个人技术实力 -->
-  <section class="py-16 bg-surface-muted">
+  <section class="py-12 lg:py-16 bg-surface-muted">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="mb-8">
         <h2 class="text-2xl font-bold text-text-primary">个人技术实力</h2>
         <p class="text-text-secondary mt-2">
-          在首页和关于页面展示个人技术能力，并关联真实作品。
+          按能力主题分组，并关联对应的真实作品。
         </p>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {skills.map((skill) => (
-          <div class="p-6 rounded-xl border border-border bg-surface hover:bg-surface-muted transition-colors">
+          <div class="p-6 rounded-xl border border-border bg-surface transition-colors hover:border-primary/40">
             <h3 class="text-lg font-semibold text-text-primary mb-2">
               {skill.name}
             </h3>
-            <p class="text-sm text-text-secondary mb-4">{skill.desc}</p>
+            <p class="text-sm text-text-secondary mb-4 leading-relaxed">{skill.desc}</p>
             <div class="flex flex-wrap gap-2 mb-4">
               {skill.tags.map((t) => (
-                <span class="px-2 py-1 rounded text-xs border border-primary/30 text-primary bg-primary/5">
+                <span class="px-2.5 py-1 rounded-full text-xs border border-primary/30 text-primary bg-primary/5">
                   {t}
                 </span>
               ))}
@@ -193,22 +182,22 @@ const recentProgress = Object.entries(progress)
   </section>
 
   <!-- 模块五：最近开发进度 -->
-  <section class="py-10">
+  <section class="py-12 lg:py-16">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="mb-8">
         <h2 class="text-2xl font-bold text-text-primary">最近开发进度</h2>
         <p class="text-text-secondary mt-2">
-          展示最近更新的真实项目进展。
+          每个作品最近一次更新的真实进展摘要。
         </p>
       </div>
       <div class="space-y-4">
         {recentProgress.length > 0 ? (
           recentProgress.map((p) => (
-            <div class="p-4 rounded-lg border border-border bg-surface">
-              <div class="flex justify-between items-start mb-2">
-                <h4 class="font-semibold text-text-primary">
+            <div class="p-5 rounded-xl border border-border bg-surface">
+              <div class="flex justify-between items-start gap-3 mb-2 flex-wrap">
+                <h3 class="font-semibold text-text-primary">
                   {p.work!.title}
-                </h4>
+                </h3>
                 <WorkStatusBadge status={p.status} />
               </div>
               <p class="text-sm text-text-secondary mb-2">
@@ -216,17 +205,17 @@ const recentProgress = Object.entries(progress)
               </p>
               {p.completedItems.length > 0 && (
                 <p class="text-sm text-text-secondary mb-1">
-                  最近完成：{p.completedItems.join("；")}
+                  <span class="text-success font-medium">最近完成</span>：{p.completedItems.join("；")}
                 </p>
               )}
               {p.nextSteps.length > 0 && (
                 <p class="text-sm text-text-secondary">
-                  下一步：{p.nextSteps.join("；")}
+                  <span class="font-medium text-text-primary">下一步</span>：{p.nextSteps.join("；")}
                 </p>
               )}
               <a
                 href={`/works/${p.work!.slug}/`}
-                class="text-xs text-primary hover:underline mt-2 inline-block font-medium"
+                class="text-sm text-primary hover:underline mt-3 inline-block font-medium"
               >
                 查看详情 →
               </a>
@@ -240,7 +229,7 @@ const recentProgress = Object.entries(progress)
   </section>
 
   <!-- 模块六：开发理念 -->
-  <section class="py-16 bg-surface-muted">
+  <section class="py-12 lg:py-16 bg-surface-muted">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="mb-8">
         <h2 class="text-2xl font-bold text-text-primary">开发理念</h2>
@@ -248,7 +237,7 @@ const recentProgress = Object.entries(progress)
           通过简洁的流程说明展示个人工程实践。
         </p>
       </div>
-      <div class="flex flex-wrap justify-center gap-4 text-sm">
+      <ol class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-sm">
         {[
           "需求分析",
           "产品设计",
@@ -257,14 +246,14 @@ const recentProgress = Object.entries(progress)
           "测试验收",
           "发布迭代",
         ].map((step, i) => (
-          <div class="flex items-center gap-2">
-            <span class="px-2 py-1 rounded bg-surface text-primary border border-border">
-              {step}
+          <li class="flex items-center gap-3 px-4 py-3 rounded-lg bg-surface border border-border">
+            <span class="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center shrink-0">
+              {i + 1}
             </span>
-            {i < 5 && <span class="text-text-secondary">→</span>}
-          </div>
+            <span class="text-text-primary font-medium">{step}</span>
+          </li>
         ))}
-      </div>
+      </ol>
       <p class="mt-6 text-xs text-text-secondary">
         流程用于表达工作方法，不代表每个项目都必须处于相同阶段。
       </p>

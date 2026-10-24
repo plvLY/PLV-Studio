@@ -8,6 +8,8 @@ const publishedWorks = (await getCollection("works", ({ data }) => data.publishe
   slug: e.id,
   ...e.data,
 }));
+// 作品较少时用横版卡片（封面在左、文字在右）压低视觉占比；作品多了切回两列纵版网格
+const useHorizontal = publishedWorks.length > 0 && publishedWorks.length <= 2;
 ---
 
 <Layout title="作品集" description="统一浏览所有公开作品 - PLV Studio">
@@ -17,13 +19,18 @@ const publishedWorks = (await getCollection("works", ({ data }) => data.publishe
   />
 
   <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div
+      class:list={[
+        "grid gap-6",
+        useHorizontal ? "grid-cols-1 max-w-5xl" : "grid-cols-1 md:grid-cols-2",
+      ]}
+    >
       {publishedWorks.length > 0 ? (
         publishedWorks.map((work) => (
-          <WorkCard work={work} />
+          <WorkCard work={work} layout={useHorizontal ? "horizontal" : "vertical"} />
         ))
       ) : (
-        <div class="col-span-full text-center py-20 text-text-secondary">
+        <div class="text-center py-20 text-text-secondary">
           暂无公开作品
         </div>
       )}
