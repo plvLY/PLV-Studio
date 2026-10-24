@@ -15,6 +15,7 @@ export const progress: Record<string, ProgressEntry[]> = {
         "设计令牌系统与暗色模式（首帧无闪烁切换）",
         "Tailwind v4 迁移与 TypeScript 类型检查接入（astro check 零错误）",
         "canonical/OG 元信息、404 页与基础无障碍支持（跳过链接、键盘导航、reduced-motion）",
+        "Cloudflare Web Analytics 站点统计接入",
       ],
       currentIssues: [],
       nextSteps: ["试运行与测试验收"],

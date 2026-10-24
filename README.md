@@ -70,6 +70,7 @@
 ## 部署
 
 - **已上线**：https://plvstudio.netlify.app （2026-10-24 部署）。
+- 站点统计：已接入 Cloudflare Web Analytics（beacon 代码位于 `src/layouts/Layout.astro`，仅生产构建注入）。
 - Netlify 构建：`npm run build` → 发布 `dist/`，Node 22（见 `netlify.toml`）。
 - `astro.config.mjs` 的 `site` 已配置为正式域名 `https://plvstudio.netlify.app`（影响 canonical / OG 元信息）。
 - 作品 frontmatter 的 `demoUrl` / `sourceUrl` / `videoUrl` 存在时，详情页自动展示对应入口；不存在则不渲染空按钮。

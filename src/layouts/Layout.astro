@@ -39,6 +39,15 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
         document.documentElement.classList.toggle('dark', dark);
       })();
     </script>
+    <!-- Cloudflare Web Analytics：官方 beacon，仅生产构建注入（本地开发流量不计入统计） -->
+    {import.meta.env.PROD && (
+      <script
+        is:inline
+        type="module"
+        src="https://static.cloudflareinsights.com/beacon.min.js"
+        data-cf-beacon='{"token": "911b252005554d2fb5fbd52213277b5a"}'
+      ></script>
+    )}
   </head>
   <body class="min-h-screen flex flex-col bg-background text-text-primary transition-colors duration-300 selection:bg-primary selection:text-white">
     <a

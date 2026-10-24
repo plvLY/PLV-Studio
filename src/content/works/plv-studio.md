@@ -35,7 +35,7 @@ videoUrl: ""
 
 ## 4. 技术实现
 
-- Astro 7 静态生成：全站零客户端框架，仅主题切换与移动菜单两段原生脚本
+- Astro 7 静态生成：全站零客户端框架，自有脚本仅主题切换与移动菜单两段原生 JS；站点统计接入 Cloudflare Web Analytics
 - Tailwind CSS v4：经 @tailwindcss/vite 接入，设计令牌映射到 CSS 变量，透明度修饰符由 color-mix 支持
 - TypeScript：共享类型定义（状态枚举与进度模型），astro check 类型检查零错误
 - 内容与样式分离：作品与文档为 Markdown 文件（Content Collections + Zod 构建期校验），进度与技术方向为 TS 数据模块
