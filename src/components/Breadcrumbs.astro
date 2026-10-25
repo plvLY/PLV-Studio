@@ -1,0 +1,34 @@
+---
+interface Crumb {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  items: Crumb[];
+}
+
+const { items } = Astro.props;
+---
+
+<nav aria-label="面包屑" class="mb-6">
+  <ol class="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-sm text-text-secondary">
+    {items.map((item, index) => {
+      const isCurrent = index === items.length - 1 || !item.href;
+      return (
+        <>
+          {index > 0 && <li aria-hidden="true" class="text-text-muted">/</li>}
+          <li>
+            {isCurrent ? (
+              <span class="text-text-primary" aria-current="page">{item.label}</span>
+            ) : (
+              <a href={item.href} class="transition-colors hover:text-primary dark:hover:text-accent">
+                {item.label}
+              </a>
+            )}
+          </li>
+        </>
+      );
+    })}
+  </ol>
+</nav>

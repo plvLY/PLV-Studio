@@ -1,7 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import PageHeader from "../components/PageHeader.astro";
-import TechStackTags from "../components/TechStackTags.astro";
+import SectionHeading from "../components/SectionHeading.astro";
+import SkillCard from "../components/SkillCard.astro";
 import { getCollection } from "astro:content";
 import { skillDirections } from "../data/skills";
 
@@ -9,167 +10,227 @@ const works = (await getCollection("works", ({ data }) => data.published)).map((
   slug: e.id,
   ...e.data,
 }));
+const featuredWorks = works.filter((work) => work.featured);
+const primaryWork = featuredWorks[0] ?? works[0];
+const workHref = primaryWork ? `/works/${primaryWork.slug}/` : "/works/";
+const documentsHref = primaryWork ? `${workHref}documents/` : "/works/";
 
-const featuredWorks = works.filter((w) => w.featured && w.published);
+// 只写真实存在、可公开访问的入口；GitHub / Gitee / 邮箱已在 2026-10-25 核验
+const contactLinks = [
+  { href: "https://github.com/plvLY", label: "GitHub", hint: "plvLY", external: true },
+  { href: "https://gitee.com/plv-coding", label: "Gitee", hint: "plv-coding", external: true },
+  { href: "mailto:837965182@qq.com", label: "邮箱", hint: "837965182@qq.com", external: false },
+  { href: "https://plv.netlify.app/", label: "现有博客", hint: "plv.netlify.app", external: true },
+];
 
-// 编码模式流程（AI 编程 + 人工审核的真实工作流）
-const codingSteps = ["AI 生成初稿", "人工审核", "构建与类型检查", "内容真实性核对"];
-
-// 技术主线三卡：核心方向 / 前端模式 / 探索方向
 const mainLines = [
   {
     label: "核心方向",
     title: "后端工程 · Java 系列",
-    desc: "以 Java 系列为主的技术栈，专注于后端工程：服务端设计与实现，包括 API 设计与领域建模。",
+    description:
+      "以后端工程为主：服务端设计、API 设计与领域建模。公开代码证据来自外部仓库，本站暂未收录可公开的后端作品档案。",
+    href: "https://gitee.com/plv-coding/agentic-dashboard",
+    action: "查看外部仓库",
+    external: true,
   },
   {
     label: "前端模式",
     title: "AI 编程 + 人工审核",
-    desc: "前端代码采用 AI 辅助生成、人工审核的编码模式。AI 负责效率，正确性、可维护性与内容真实性由人把关。",
+    description:
+      "界面代码采用 AI 辅助生成、人工审核的方式。AI 负责效率，正确性、可维护性与内容真实性由人把关。",
+    href: workHref,
+    action: "查看本站实践",
+    external: false,
   },
   {
     label: "探索方向",
     title: "AI 应用集成",
-    desc: "目前持续探索 AI 应用集成：模型 API 接入、上游服务适配与集成方式，逐步接入实际项目。",
+    description:
+      "持续探索模型 API 接入、上游服务适配与统一错误处理。外部仓库仍在迭代，不把探索中的方向写成已完成能力。",
+    href: "https://gitee.com/plv-coding/plv-ai-hub",
+    action: "查看探索仓库",
+    external: true,
   },
 ];
+
+const workflow = [
+  {
+    step: "01",
+    title: "需求与边界",
+    description: "明确访客目标、内容模型与验收标准，先写需求再进入实现。",
+    href: `${documentsHref}requirements/`,
+    action: "需求分析文档",
+  },
+  {
+    step: "02",
+    title: "设计与架构",
+    description: "记录技术选型、分层、路由与设计令牌；关键取舍进入架构与 UI 文档。",
+    href: `${documentsHref}architecture/`,
+    action: "技术架构文档",
+  },
+  {
+    step: "03",
+    title: "开发与记录",
+    description: "小步实现并持续做类型检查与构建校验，阶段事项写入开发进度。",
+    href: `${workHref}#progress`,
+    action: "开发进度",
+  },
+  {
+    step: "04",
+    title: "验收与发布",
+    description: "按真实清单核对响应式、可访问性、链接与静态资源，完成部署后记录上线。",
+    href: `${workHref}#release`,
+    action: "验收与上线",
+  },
+];
+
+const description =
+  "PLV Studio 作者介绍：Java 系列后端工程为核心方向，前端采用 AI 编程 + 人工审核，持续探索 AI 应用集成；能力与证据可追溯。";
 ---
 
-<Layout
-  title="关于"
-  description="全栈开发工程师的技术主线：Java 后端专注、AI 编程+人工审核的前端模式与 AI 应用集成探索 - PLV Studio"
->
+<Layout title="关于" description={description}>
   <PageHeader
+    eyebrow="About"
     title="关于"
-    subtitle="全栈开发工程师 · Java 系列 · 专注后端工程 · 持续探索 AI 应用集成"
-  />
+    subtitle="全栈开发工程师 · Java 系列 · 专注后端工程 · 前端 AI 编程 + 人工审核 · 持续探索 AI 应用集成"
+  >
+    <div class="mt-5 flex flex-wrap items-center gap-2.5">
+      {contactLinks.map((link) => (
+        <a
+          href={link.href}
+          target={link.external ? "_blank" : undefined}
+          rel={link.external ? "noopener noreferrer" : undefined}
+          class="btn btn-secondary"
+        >
+          {link.label}
+          <span class="text-xs font-normal text-text-muted">{link.hint}</span>
+          {link.external && <span class="text-text-muted" aria-hidden="true">↗</span>}
+          {link.external && <span class="sr-only">（在新标签页打开）</span>}
+        </a>
+      ))}
+    </div>
+  </PageHeader>
 
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-    <!-- 个人简介：围绕技术主线陈述 -->
-    <section class="mb-12">
-      <h2 class="text-xl font-bold text-text-primary mb-4">个人简介</h2>
-      <p class="text-text-secondary leading-relaxed">
-        全栈开发工程师，使用 Java 系列技术栈，专注于后端工程；前端采用 AI 编程 + 人工审核的编码模式，目前持续探索 AI 应用集成。通过 PLV Studio 以作品为中心，把每个项目的目标、设计文档、开发进度与阶段产物组织成可持续维护的内容体系。
-      </p>
-    </section>
-
-    <!-- 技术主线：核心方向 / 前端模式 / 探索方向 -->
-    <section class="mb-12">
-      <h2 class="text-xl font-bold text-text-primary mb-4">技术主线</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {mainLines.map((line) => (
-          <div class="p-6 rounded-xl border border-border bg-surface">
-            <div class="text-xs font-semibold text-primary mb-2">{line.label}</div>
-            <h3 class="font-semibold text-text-primary mb-2">{line.title}</h3>
-            <p class="text-sm text-text-secondary leading-relaxed">{line.desc}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-
-    <!-- 技术方向明细（与首页共用 skills.ts 数据） -->
-    <section class="mb-12">
-      <h2 class="text-xl font-bold text-text-primary mb-4">主要技术方向</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {skillDirections.map((dir) => (
-          <div class="p-5 rounded-xl border border-border bg-surface">
-            <div class="flex items-center gap-2 mb-3 flex-wrap">
-              <h4 class="font-semibold text-text-primary">{dir.name}</h4>
-              {dir.note && (
-                <span class="px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary font-medium">
-                  {dir.note}
-                </span>
-              )}
-            </div>
-            <ul class="text-sm text-text-secondary space-y-1">
-              {dir.items.map((item) => (
-                <li class="flex items-center gap-2">
-                  <span class="text-accent">▸</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </section>
-
-    <!-- 编码模式与工程实践：AI 编程 + 人工审核 -->
-    <section class="mb-12">
-      <h2 class="text-xl font-bold text-text-primary mb-4">编码模式与工程实践</h2>
-      <div class="bg-surface rounded-xl border border-border p-6">
-        <div class="flex flex-wrap items-center gap-3 text-sm">
-          {codingSteps.map((step, i) => (
-            <div class="flex items-center gap-3">
-              <span class="px-2 py-1 rounded bg-surface-muted border border-border text-text-primary">
-                {step}
-              </span>
-              {i < codingSteps.length - 1 && <span class="text-text-secondary">→</span>}
-            </div>
-          ))}
-        </div>
-        <p class="text-text-secondary leading-relaxed mt-4">
-          AI 负责编码效率，人工负责质量与事实把关：代码通过 astro check 与构建才算完成，内容不编造链接、日期与成果。内容以实际实现为准，规划中的技术方案明确标注为规划，而非已经落地的功能。
+  <div class="container-page pb-16">
+    <section class="max-w-3xl" aria-labelledby="intro-title">
+      <h2 id="intro-title" class="text-xl font-bold text-text-primary">个人简介</h2>
+      <div class="mt-4 space-y-4 text-base leading-relaxed text-text-secondary">
+        <p>
+          我是 PLV，全栈开发工程师，使用 Java 系列技术栈，专注于后端工程。前端采用 AI 编程 + 人工审核的编码模式，
+          目前持续探索 AI 应用集成。
+        </p>
+        <p>
+          PLV Studio 把我对项目的理解整理成可检查的档案：目标、设计文档、开发记录、验收事项与技术实现都放在同一个作品下。
+          这里不追求作品数量，也不把规划写成成果；没有证据的能力会明确标注为探索中或公开案例有限。
         </p>
       </div>
     </section>
 
-    <!-- 代表作品与能力关联 -->
-    <section class="mb-12">
-      <h2 class="text-xl font-bold text-text-primary mb-4">代表作品与能力关联</h2>
-      <div class="space-y-4">
-        {featuredWorks.map((work) => (
-          <div class="flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-xl border border-border bg-surface">
-            {work.icon ? (
-              <img
-                src={work.icon}
-                alt=""
-                class="w-12 h-12 rounded-lg object-cover shrink-0"
-                width="48"
-                height="48"
-              />
-            ) : (
-              <div class="w-12 h-12 rounded-lg bg-surface-muted flex items-center justify-center text-text-secondary shrink-0">
-                {work.title.charAt(0)}
-              </div>
-            )}
-            <div class="flex-1 min-w-0">
-              <h3 class="font-semibold text-text-primary">{work.title}</h3>
-              <p class="text-sm text-text-secondary mb-2">{work.summary}</p>
-              <TechStackTags tags={work.techStack} />
-            </div>
+    <section class="mt-12" aria-labelledby="focus-title">
+      <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-border pb-3">
+        <h2 id="focus-title" class="text-xl font-bold text-text-primary">技术主线</h2>
+        <p class="text-xs text-text-muted">核心方向 / 编码模式 / 探索方向</p>
+      </div>
+      <div class="mt-6 grid gap-5 md:grid-cols-3">
+        {mainLines.map((line) => (
+          <article class="surface-card flex h-full flex-col p-5">
+            <p class="text-xs font-semibold text-primary dark:text-accent">{line.label}</p>
+            <h3 class="mt-2 font-semibold text-text-primary">{line.title}</h3>
+            <p class="mt-2 flex-1 text-sm leading-relaxed text-text-secondary">{line.description}</p>
             <a
-              href={`/works/${work.slug}/`}
-              class="text-sm text-primary hover:underline font-medium shrink-0 self-start sm:self-center"
+              href={line.href}
+              target={line.external ? "_blank" : undefined}
+              rel={line.external ? "noopener noreferrer" : undefined}
+              class="text-link mt-4"
             >
-              查看详情 →
+              {line.action}
+              <span aria-hidden="true">{line.external ? "↗" : "→"}</span>
+              {line.external && <span class="sr-only">（在新标签页打开）</span>}
             </a>
-          </div>
+          </article>
         ))}
       </div>
     </section>
 
-    <!-- 持续探索方向 -->
-    <section class="mb-12">
-      <h2 class="text-xl font-bold text-text-primary mb-4">持续探索方向</h2>
-      <ul class="list-disc list-inside text-text-secondary space-y-2">
-        <li>深化 Java 系列后端工程：API 设计与领域建模</li>
-        <li>探索 AI 应用集成：模型接入、上游服务适配与集成方式</li>
-        <li>完善作品全生命周期记录与技术文档体系</li>
-      </ul>
+    <section id="capabilities" class="mt-12 scroll-mt-24" aria-labelledby="capabilities-title">
+      <SectionHeading
+        id="capabilities-title"
+        eyebrow="Capabilities"
+        title="能力与公开证据"
+        description="每项能力都关联站内文档、作品或已核验的外部仓库。外部仓库不会被包装成本站作品。"
+      />
+
+      <div class="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-text-secondary">
+        <span class="inline-flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-success" aria-hidden="true"></span>已实践 · 有站内产物</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-warning" aria-hidden="true"></span>探索中 · 外部持续迭代</span>
+        <span class="inline-flex items-center gap-1.5"><span class="h-1.5 w-1.5 rounded-full bg-primary dark:bg-accent" aria-hidden="true"></span>专业方向 · 公开案例有限</span>
+      </div>
+
+      <div class="mt-7 grid gap-5 md:grid-cols-2">
+        {skillDirections.map((skill) => (
+          <SkillCard skill={skill} />
+        ))}
+      </div>
+
+      <p class="mt-5 text-xs leading-relaxed text-text-muted">
+        说明：本站目前只有 1 个公开作品（PLV Studio 自身）。GitHub / Gitee 仓库作为外部能力证据展示，
+        不代表它们已收录为本站作品。
+      </p>
     </section>
 
-    <!-- 外部博客入口 -->
-    <section>
-      <h2 class="text-xl font-bold text-text-primary mb-4">外部博客</h2>
-      <a
-        href="https://plv.netlify.app/"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="inline-flex items-center gap-2 text-primary hover:underline font-medium"
-      >
-        访问现有博客 ↗
-      </a>
+    <section id="workflow" class="mt-12 scroll-mt-24" aria-labelledby="workflow-title">
+      <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-border pb-3">
+        <h2 id="workflow-title" class="text-xl font-bold text-text-primary">项目如何被记录</h2>
+        <a href={workHref} class="text-link">查看完整案例 →</a>
+      </div>
+      <ol class="mt-6 grid gap-4 sm:grid-cols-2">
+        {workflow.map((item) => (
+          <li class="surface-card flex h-full flex-col p-5">
+            <div class="flex items-baseline gap-3">
+              <span class="text-xs font-semibold tabular-nums text-text-muted" aria-hidden="true">{item.step}</span>
+              <h3 class="font-semibold text-text-primary">{item.title}</h3>
+            </div>
+            <p class="mt-2 flex-1 text-sm leading-relaxed text-text-secondary">{item.description}</p>
+            <a href={item.href} class="text-link mt-3">
+              {item.action}
+              <span aria-hidden="true">→</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+      <p class="mt-4 text-xs leading-relaxed text-text-muted">
+        需求、架构与 UI 设计文档当前公开 3 份；测试验收、发布与维护结论记录在开发进度中，复盘文档尚未单独发布。
+      </p>
     </section>
+
+    <section id="contact" class="mt-12 scroll-mt-24" aria-labelledby="contact-title">
+      <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-border pb-3">
+        <h2 id="contact-title" class="text-xl font-bold text-text-primary">公开入口</h2>
+        <p class="text-xs text-text-muted">均已核验可访问</p>
+      </div>
+      <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {contactLinks.map((link) => (
+          <a
+            href={link.href}
+            target={link.external ? "_blank" : undefined}
+            rel={link.external ? "noopener noreferrer" : undefined}
+            class="surface-card group flex min-h-16 items-center justify-between gap-3 px-4 py-3 transition-colors hover:border-primary/40"
+          >
+            <span>
+              <span class="block text-sm font-semibold text-text-primary transition-colors group-hover:text-primary dark:group-hover:text-accent">
+                {link.label}
+              </span>
+              <span class="mt-0.5 block truncate text-xs text-text-muted">{link.hint}</span>
+            </span>
+            <span class="text-text-muted" aria-hidden="true">{link.external ? "↗" : "→"}</span>
+            {link.external && <span class="sr-only">（在新标签页打开）</span>}
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <p class="mt-10 text-xs leading-relaxed text-text-muted">
+      本站内容以实际实现为准：链接不存在时不展示空按钮，日期与状态来自内容集合；规划中的能力明确标注，不写成已完成。
+    </p>
   </div>
 </Layout>

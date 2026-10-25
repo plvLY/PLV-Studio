@@ -3,37 +3,143 @@ import Layout from "../layouts/Layout.astro";
 import PageHeader from "../components/PageHeader.astro";
 import WorkCard from "../components/WorkCard.astro";
 import { getCollection } from "astro:content";
+import { progress } from "../data/progress";
+import { publicStatusLabel } from "../lib/works";
 
 const publishedWorks = (await getCollection("works", ({ data }) => data.published)).map((e) => ({
   slug: e.id,
   ...e.data,
 }));
+const publishedSlugs = new Set(publishedWorks.map((work) => work.slug));
+
+const docEntries = await getCollection("documents");
+const docCount = docEntries.filter((doc) => publishedSlugs.has(doc.id.split("/")[0])).length;
+const progressCount = publishedWorks.reduce(
+  (total, work) => total + (progress[work.slug]?.length ?? 0),
+  0,
+);
+const latestUpdate =
+  [
+    ...publishedWorks.map((work) => work.updatedAt),
+    ...publishedWorks.flatMap((work) => (progress[work.slug] ?? []).map((item) => item.updatedAt)),
+  ]
+    .sort()
+    .at(-1) ?? "";
+const onlineCount = publishedWorks.filter(
+  (work) => publicStatusLabel(work.status, work.demoUrl) === "已上线",
+).length;
+
 // 作品较少时用横版卡片（封面在左、文字在右）压低视觉占比；作品多了切回两列纵版网格
 const useHorizontal = publishedWorks.length > 0 && publishedWorks.length <= 2;
+
+const featuredWork = publishedWorks.find((work) => work.featured) ?? publishedWorks[0];
+const featuredHref = featuredWork ? `/works/${featuredWork.slug}/` : "/works/";
+const documentsHref = featuredWork ? `${featuredHref}documents/` : "/works/";
+
+const recordItems = [
+  {
+    title: "设计文档",
+    description: "需求、架构与 UI 设计以 Markdown 维护，按开发节点排序，版本与更新时间可追溯。",
+    href: documentsHref,
+    action: "阅读文档",
+  },
+  {
+    title: "开发记录",
+    description: "每个阶段记录完成事项、当前问题与下一步；状态来自真实进度数据，不按流程步骤凑数。",
+    href: `${featuredHref}#progress`,
+    action: "查看进度",
+  },
+  {
+    title: "验收与入口",
+    description: "上线、验收与外部入口集中展示；链接不存在时不显示空按钮，不用占位内容填充。",
+    href: `${featuredHref}#release`,
+    action: "查看验收",
+  },
+];
+
+const description = `浏览 PLV Studio 的公开作品：${publishedWorks.map((work) => work.title).join("、") || "暂无作品"}。每个作品包含设计文档、开发进度与可核验的外部入口。`;
 ---
 
-<Layout title="作品集" description="统一浏览所有公开作品 - PLV Studio">
+<Layout title="作品集" description={description}>
   <PageHeader
-    title="我的作品"
-    subtitle={`精选项目、设计文档、开发进度与技术实现。共 ${publishedWorks.length} 个公开作品`}
-  />
-
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-    <div
-      class:list={[
-        "grid gap-6",
-        useHorizontal ? "grid-cols-1 max-w-5xl" : "grid-cols-1 md:grid-cols-2",
-      ]}
-    >
-      {publishedWorks.length > 0 ? (
-        publishedWorks.map((work) => (
-          <WorkCard work={work} layout={useHorizontal ? "horizontal" : "vertical"} />
-        ))
-      ) : (
-        <div class="text-center py-20 text-text-secondary">
-          暂无公开作品
-        </div>
-      )}
+    eyebrow="Works"
+    title="作品集"
+    subtitle="以作品为单位，把目标、设计文档、开发进度、验收记录与技术实现组织成可追溯的项目档案。"
+  >
+    <div class="mt-5 flex flex-wrap items-center gap-3">
+      <a href={featuredHref} class="btn btn-primary">查看精选作品</a>
+      <a href={documentsHref} class="btn btn-secondary">浏览设计文档</a>
+      <a href="/about/" class="btn btn-ghost">了解工作方式</a>
     </div>
+  </PageHeader>
+
+  <div class="container-page pb-16">
+    <dl class="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-4">
+      <div class="bg-surface px-4 py-4">
+        <dt class="text-xs text-text-muted">公开作品</dt>
+        <dd class="mt-1 text-lg font-semibold tabular-nums text-text-primary">{publishedWorks.length} 个</dd>
+      </div>
+      <div class="bg-surface px-4 py-4">
+        <dt class="text-xs text-text-muted">已上线</dt>
+        <dd class="mt-1 text-lg font-semibold tabular-nums text-text-primary">{onlineCount} 个</dd>
+      </div>
+      <div class="bg-surface px-4 py-4">
+        <dt class="text-xs text-text-muted">设计文档</dt>
+        <dd class="mt-1 text-lg font-semibold tabular-nums text-text-primary">{docCount} 份</dd>
+      </div>
+      <div class="bg-surface px-4 py-4">
+        <dt class="text-xs text-text-muted">最近更新</dt>
+        <dd class="mt-1 text-sm font-semibold tabular-nums text-text-primary">
+          <time datetime={latestUpdate}>{latestUpdate || "—"}</time>
+        </dd>
+      </div>
+    </dl>
+
+    <section class="mt-10" aria-labelledby="all-works-title">
+      <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-border pb-3">
+        <h2 id="all-works-title" class="text-xl font-bold text-text-primary">全部作品</h2>
+        <p class="text-xs text-text-muted">{publishedWorks.length} 个公开作品 · {progressCount} 条开发记录</p>
+      </div>
+
+      <div
+        class:list={[
+          "mt-6 grid gap-6",
+          useHorizontal ? "grid-cols-1 max-w-5xl" : "grid-cols-1 md:grid-cols-2",
+        ]}
+      >
+        {publishedWorks.length > 0 ? (
+          publishedWorks.map((work) => (
+            <WorkCard work={work} layout={useHorizontal ? "horizontal" : "vertical"} />
+          ))
+        ) : (
+          <div class="rounded-xl border border-dashed border-border px-6 py-20 text-center text-text-secondary">
+            暂无公开作品
+          </div>
+        )}
+      </div>
+    </section>
+
+    {featuredWork && (
+      <section class="mt-12" aria-labelledby="record-standard-title">
+        <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-border pb-3">
+          <h2 id="record-standard-title" class="text-xl font-bold text-text-primary">每个作品如何被记录</h2>
+          <a href={featuredHref} class="text-link">以 {featuredWork.title} 为例 →</a>
+        </div>
+        <div class="mt-6 grid gap-4 md:grid-cols-3">
+          {recordItems.map((item) => (
+            <a href={item.href} class="surface-card group flex h-full flex-col p-5 transition-colors hover:border-primary/40">
+              <h3 class="font-semibold text-text-primary transition-colors group-hover:text-primary dark:group-hover:text-accent">
+                {item.title}
+              </h3>
+              <p class="mt-2 flex-1 text-sm leading-relaxed text-text-secondary">{item.description}</p>
+              <span class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary dark:text-accent">
+                {item.action}
+                <span aria-hidden="true">→</span>
+              </span>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
   </div>
 </Layout>

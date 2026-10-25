@@ -1,0 +1,42 @@
+---
+interface Props {
+  /** 章节锚点（省略时由调用方在标题上单独设置 id） */
+  id?: string;
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  actionHref?: string;
+  actionLabel?: string;
+  /** 标题与说明的额外包裹类，用于局部对齐 */
+  class?: string;
+}
+
+const {
+  id,
+  eyebrow,
+  title,
+  description,
+  actionHref,
+  actionLabel,
+  class: className,
+} = Astro.props;
+---
+
+<div
+  class:list={[
+    "flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between",
+    className,
+  ]}
+>
+  <div class="min-w-0">
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    <h2 id={id} class:list={["section-heading", eyebrow && "mt-2"]}>{title}</h2>
+    {description && <p class="section-copy">{description}</p>}
+  </div>
+  {actionHref && actionLabel && (
+    <a href={actionHref} class="text-link shrink-0">
+      {actionLabel}
+      <span aria-hidden="true">→</span>
+    </a>
+  )}
+</div>

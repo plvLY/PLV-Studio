@@ -2,7 +2,7 @@
 title: "技术架构"
 type: "architecture"
 version: "v1.0"
-updatedAt: "2026-10-24"
+updatedAt: "2026-10-25"
 summary: "技术选型理由、系统分层、设计令牌体系、路由渲染与构建部署方案"
 ---
 
@@ -39,16 +39,21 @@ summary: "技术选型理由、系统分层、设计令牌体系、路由渲染�
   ├─ index.astro                     首页
   ├─ works.astro                     作品列表
   ├─ works/[slug].astro              作品详情（render(entry) 渲染 Markdown）
-  ├─ works/[slug]/documents/         文档列表与文档阅读页
+  ├─ works/[slug]/documents/index.astro    文档列表
+  ├─ works/[slug]/documents/[doc].astro    文档阅读（目录 / 上一篇 / 下一篇）
   ├─ about.astro                     关于
-  └─ 404.astro                       404 页
+  ├─ 404.astro                       404 页（noindex）
+  └─ sitemap.xml.ts                  sitemap 端点（静态生成 XML）
 
 展示层（src/layouts/ + src/components/）
   Layout（meta、主题内联脚本、页头页脚）+
-  WorkCard / DocumentCard / ProgressTimeline / WorkStatusBadge / TechStackTags / PageHeader
+  WorkCard / FeaturedWorkCard / DocumentCard / ProgressTimeline /
+  WorkStatusBadge / TechStackTags / PageHeader / Breadcrumbs / ProjectToc /
+  SectionHeading / SkillCard
+数据与工具（src/lib/）：works.ts（类型/状态文案）、documents.ts（生命周期排序）、progress.ts（最近进度）
 ```
 
-数据流：构建时 `getCollection()` 查询集合，页面将其映射为视图模型后交给组件渲染为静态 HTML；运行时没有任何 JS 数据请求。状态徽标、日期与作品名称全部来自统一数据源，页面之间不会各自维护一份数据。
+数据流：构建时 `getCollection()` 查询集合，页面将其映射为视图模型后交给组件渲染为静态 HTML；运行时没有任何 JS 数据请求。状态徽标、日期与作品名称全部来自统一数据源，页面之间不会各自维护一份数据。首页、「关于」与作品详情共用 `skills.ts`、`progress.ts` 与作品 frontmatter，能力证据不会在多个页面出现不同版本。
 
 ## 3. 设计令牌系统
 
@@ -69,7 +74,7 @@ summary: "技术选型理由、系统分层、设计令牌体系、路由渲染�
 
 ## 5. 构建与部署
 
-- `npm run build`：`astro build` 生成纯静态产物到 `dist/`（当前 7 个路由 + 404 页）。
+- `npm run build`：`astro build` 生成纯静态产物到 `dist/`。当前产物包含 9 个 HTML 页面（首页、作品列表、作品详情、文档列表、3 篇文档、关于、404）以及 `sitemap.xml`。
 - `npm run check`：`@astrojs/check` 全站类型检查，作为变更前的验证门槛。
 - Netlify：`netlify.toml` 指定构建命令与产物目录，`NODE_VERSION = 22`；`package.json` 的 `engines` 要求 Node ≥ 22.22，保证本地与构建环境一致。
 - 正式域名：`site` 配置为 `https://plvstudio.netlify.app`，canonical / OG 元信息按此生成绝对地址。
@@ -77,4 +82,4 @@ summary: "技术选型理由、系统分层、设计令牌体系、路由渲染�
 
 ## 6. 已知限制
 
-- **无自动化测试**：测试验收处于试运行阶段，依赖人工验收清单（响应式、链接、无障碍）。
+- **无自动化测试**：站点已上线，但当前没有单元测试或端到端测试；验收依赖人工清单（响应式、链接、无障碍、构建与类型检查），结论记录在开发进度中，不伪造测试报告。

@@ -7,10 +7,27 @@ import "../styles/global.css";
 interface Props {
   title?: string;
   description?: string;
+  /** 分享图：默认使用站点自身的真实首页截图，可按页面覆盖 */
+  image?: string;
+  /** Open Graph 内容类型 */
+  ogType?: "website" | "article";
+  /** 404 等不应被搜索引擎收录的页面使用 */
+  noindex?: boolean;
 }
 
-const { title = "PLV Studio", description = "个人作品展示与项目全生命周期记录站点" } = Astro.props;
+const {
+  title = "PLV Studio",
+  description = "个人作品展示与项目全生命周期记录站点",
+  image = "/images/works/plv-studio/cover.png",
+  ogType = "website",
+  noindex = false,
+} = Astro.props;
+
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL(image, Astro.site);
+// 作品标题本身可能就叫 PLV Studio（本站自身）：避免出现「PLV Studio · PLV Studio」
+const pageTitle =
+  title === "PLV Studio" ? "PLV Studio · 个人作品与技术实践" : `${title} · PLV Studio`;
 ---
 
 <!DOCTYPE html>
@@ -24,15 +41,25 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
     <!-- Astro 内置客户端路由：导航时局部交换页面，消除整页重载的白屏/抖动；
          禁用 JS 时自动回退为普通多页跳转（渐进增强） -->
     <ClientRouter />
-    <title>{title} · PLV Studio</title>
+    <title>{pageTitle}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonicalUrl} />
-    <meta property="og:type" content="website" />
+    <meta name="author" content="PLV Studio" />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    {!noindex && <link rel="canonical" href={canonicalUrl} />}
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:url" content={canonicalUrl} />
-    <meta property="og:title" content={`${title} · PLV Studio`} />
+    <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:site_name" content="PLV Studio" />
-    <meta name="twitter:card" content="summary" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:alt" content={`${title} · PLV Studio`} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={`${title} · PLV Studio`} />
     <meta name="theme-color" content="#F7F8FA" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0B1120" media="(prefers-color-scheme: dark)" />
     <!-- 首帧前恢复主题，避免暗色模式闪烁（FOUC）；判定逻辑与 ThemeToggle 保持一致 -->
@@ -58,18 +85,18 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site);
       ></script>
     )}
   </head>
-  <body class="min-h-screen flex flex-col bg-background text-text-primary transition-colors duration-300 selection:bg-primary selection:text-white">
+  <body class="flex min-h-screen flex-col bg-background text-text-primary transition-colors duration-300">
     <a
       href="#main"
-      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[60] focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[60] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-white"
     >
       跳转到主要内容
     </a>
     <SiteHeader />
-    <main id="main" class="flex-grow">
+    <main id="main" class="flex-grow" tabindex="-1">
       <slot />
     </main>
-    <!-- 页脚使用固定定位语与版权文案，不随页面级 description 变化（SEO description 仍由 <head> 使用） -->
+    <!-- 页脚使用固定品牌与版权文案，不随页面级 description 变化（SEO description 仍由 <head> 使用） -->
     <SiteFooter />
   </body>
 </html>

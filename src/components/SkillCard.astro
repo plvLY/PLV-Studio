@@ -1,0 +1,111 @@
+---
+import type { SkillDirection, SkillMaturity } from "../types";
+import TechStackTags from "./TechStackTags.astro";
+
+interface Props {
+  skill: SkillDirection;
+}
+
+const { skill } = Astro.props;
+
+// 成熟度必须同时用文字与颜色表达，不能只靠颜色。
+const maturityMap: Record<
+  SkillMaturity,
+  { label: string; dot: string; text: string; bg: string; border: string }
+> = {
+  practiced: {
+    label: "已实践",
+    dot: "bg-success",
+    text: "text-success",
+    bg: "bg-success/5",
+    border: "border-success/25",
+  },
+  exploring: {
+    label: "探索中",
+    dot: "bg-warning",
+    text: "text-warning",
+    bg: "bg-warning/5",
+    border: "border-warning/25",
+  },
+  professional: {
+    label: "专业方向",
+    dot: "bg-primary dark:bg-accent",
+    text: "text-primary dark:text-accent",
+    bg: "bg-primary/5 dark:bg-accent/10",
+    border: "border-primary/20 dark:border-accent/25",
+  },
+};
+
+const maturity = maturityMap[skill.maturity];
+---
+
+<article class="flex h-full flex-col rounded-xl border border-border bg-surface p-5 transition-colors hover:border-primary/35 sm:p-6">
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div class="min-w-0">
+      <h3 class="text-lg font-semibold text-text-primary">{skill.name}</h3>
+      {skill.note && (
+        <p class="mt-1 text-xs text-text-muted">{skill.note}</p>
+      )}
+    </div>
+    <span
+      class:list={[
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+        maturity.text,
+        maturity.bg,
+        maturity.border,
+      ]}
+    >
+      <span class:list={["h-1.5 w-1.5 rounded-full", maturity.dot]} aria-hidden="true"></span>
+      {maturity.label}
+    </span>
+  </div>
+
+  <p class="mt-4 text-sm leading-relaxed text-text-secondary">{skill.summary}</p>
+
+  <div class="mt-4">
+    <TechStackTags tags={skill.items} />
+  </div>
+
+  <div class="mt-auto border-t border-border/80 pt-5">
+    <p class="meta-label">证据入口</p>
+    <ul class="mt-2.5 space-y-2.5">
+      {skill.evidence.map((item) => (
+        <li>
+          <a
+            href={item.href}
+            target={item.external ? "_blank" : undefined}
+            rel={item.external ? "noopener noreferrer" : undefined}
+            class="group flex min-h-6 items-start justify-between gap-3 text-sm text-text-primary transition-colors hover:text-primary dark:hover:text-accent"
+          >
+            <span class="min-w-0">
+              <span class="font-medium underline-offset-4 group-hover:underline">{item.label}</span>
+              {item.meta && (
+                <span class="mt-0.5 block text-xs text-text-muted">{item.meta}</span>
+              )}
+            </span>
+            <svg
+              class="mt-0.5 h-4 w-4 shrink-0 text-text-muted transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:text-primary dark:group-hover:text-accent motion-reduce:transform-none"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              {item.external ? (
+                <>
+                  <path d="M7 17 17 7"></path>
+                  <path d="M7 7h10v10"></path>
+                </>
+              ) : (
+                <path d="m9 18 6-6-6-6"></path>
+              )}
+            </svg>
+            {item.external && <span class="sr-only">（在新标签页打开）</span>}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</article>

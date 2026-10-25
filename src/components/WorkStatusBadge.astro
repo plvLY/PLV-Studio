@@ -6,8 +6,10 @@ interface Props {
   size?: "sm" | "md";
   /** soft=彩色浅底（默认，用于文本区域）；overlay=中性胶囊（叠在封面图上） */
   variant?: "soft" | "overlay";
+  /** 覆盖默认状态文案，用于把「已完成 + 可访问演示」统一显示为「已上线」 */
+  label?: string;
 }
-const { status = "planned", size = "sm", variant = "soft" } = Astro.props;
+const { status = "planned", size = "sm", variant = "soft", label } = Astro.props;
 
 // 每种状态附带暗色变体，避免浅色底徽标在暗色模式下刺眼
 const statusMap: Record<WorkStatus, { label: string; dotColor: string; textColor: string; borderColor: string; bgColor: string }> = {
@@ -56,22 +58,23 @@ const statusMap: Record<WorkStatus, { label: string; dotColor: string; textColor
 };
 
 const info = statusMap[status] ?? statusMap.planned;
+const displayLabel = label ?? info.label;
 const sizeClasses = size === "md" ? "px-3 py-1 text-sm" : "px-2.5 py-0.5 text-xs";
 const overlaySizeClasses = size === "md" ? "px-3 py-1.5 text-sm" : "px-2.5 py-1 text-xs";
 ---
 
 {variant === "overlay" ? (
   <span
-    class={`inline-flex items-center gap-1.5 rounded-full font-medium bg-surface/90 backdrop-blur-sm border border-border/60 text-text-primary shadow-sm ${overlaySizeClasses}`}
+    class={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-border/60 bg-surface/90 font-medium text-text-primary shadow-sm backdrop-blur-sm ${overlaySizeClasses}`}
   >
-    <span class={`w-1.5 h-1.5 rounded-full ${info.dotColor}`}></span>
-    {info.label}
+    <span class={`h-1.5 w-1.5 rounded-full ${info.dotColor}`} aria-hidden="true"></span>
+    {displayLabel}
   </span>
 ) : (
   <span
-    class={`inline-flex items-center gap-1.5 rounded font-medium border ${info.textColor} ${info.borderColor} ${info.bgColor} ${sizeClasses}`}
+    class={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border font-medium ${info.textColor} ${info.borderColor} ${info.bgColor} ${sizeClasses}`}
   >
-    <span class={`w-1.5 h-1.5 rounded-full ${info.dotColor}`}></span>
-    {info.label}
+    <span class={`h-1.5 w-1.5 rounded-full ${info.dotColor}`} aria-hidden="true"></span>
+    {displayLabel}
   </span>
 )}

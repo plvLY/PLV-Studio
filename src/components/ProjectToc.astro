@@ -1,0 +1,38 @@
+---
+import type { MarkdownHeading } from "astro";
+
+interface Props {
+  headings: MarkdownHeading[];
+  title?: string;
+  /** 同一页面可能出现移动端/桌面端两个目录，用 id 前缀避免重复 */
+  id?: string;
+}
+
+const { headings, title = "本文目录", id = "toc" } = Astro.props;
+// 只展示正文的 H2/H3，H1 已由页面标题承担
+const visibleHeadings = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const titleId = `${id}-title`;
+---
+
+{visibleHeadings.length > 0 && (
+  <nav aria-labelledby={titleId}>
+    <h2 id={titleId} class="text-xs font-semibold uppercase tracking-[0.14em] text-text-muted">
+      {title}
+    </h2>
+    <ul class="mt-3 space-y-1 border-l border-border">
+      {visibleHeadings.map((heading) => (
+        <li>
+          <a
+            href={`#${heading.slug}`}
+            class:list={[
+              "-ml-px block border-l border-transparent py-1.5 pr-2 text-sm leading-snug text-text-secondary transition-colors hover:border-primary hover:text-primary dark:hover:border-accent dark:hover:text-accent",
+              heading.depth === 3 ? "pl-6" : "pl-4",
+            ]}
+          >
+            {heading.text}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}

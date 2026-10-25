@@ -24,11 +24,25 @@ export interface ProgressEntry {
   nextSteps: string[];
 }
 
+/** 能力成熟度：已实践 / 探索中 / 专业方向（避免用百分比表达技能熟练度） */
+export type SkillMaturity = "practiced" | "exploring" | "professional";
+
+/** 能力证据：站内文档、作品页或经过核验的外部仓库 */
+export interface SkillEvidence {
+  label: string;
+  href: string;
+  /** 证据来源说明，例如「站内文档」「外部仓库 · 开发中」 */
+  meta?: string;
+  external?: boolean;
+}
+
 export interface SkillDirection {
   name: string;
-  /** 定位标签（可选）：如"核心方向""探索方向"，用于突出技术主线 */
+  /** 定位标签（可选）：如「核心方向」「探索方向」 */
   note?: string;
+  maturity: SkillMaturity;
+  /** 一句可核验的实践说明，不写无法证明的成果 */
+  summary: string;
   items: string[];
-  /** 关联的真实作品 slug（可选）；填写时必须在 src/content/works/ 中存在同名作品文件 */
-  workSlug?: string;
+  evidence: SkillEvidence[];
 }

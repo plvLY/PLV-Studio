@@ -5,9 +5,9 @@ interface Props {
 const { tags = [] } = Astro.props;
 ---
 
-<div class="flex flex-wrap gap-2">
+<div class="flex flex-wrap gap-1.5">
   {tags.map((tag) => (
-    <span class="px-3 py-1 rounded-full text-xs bg-surface-muted text-text-secondary">
+    <span class="inline-flex items-center rounded-full border border-border/80 bg-surface-muted px-2.5 py-1 text-xs text-text-secondary">
       {tag}
     </span>
   ))}

@@ -16,13 +16,13 @@
   --c-surface: 255 255 255;         /* #FFFFFF */
   --c-surface-muted: 238 242 247;   /* #EEF2F7 */
   --c-text-primary: 23 32 51;       /* #172033 */
-  --c-text-secondary: 100 116 139;  /* #64748B（白底约 4.8:1） */
-  --c-text-muted: 90 104 125;       /* #5A687D（白底约 5.6:1，满足 AA） */
+  --c-text-secondary: 82 96 117;    /* #526075（在 #EEF2F7 上约 5.7:1） */
+  --c-text-muted: 90 104 125;       /* #5A687D（在 #EEF2F7 上约 5.0:1） */
   --c-border: 226 232 240;          /* #E2E8F0 */
-  --c-primary: 37 99 235;           /* #2563EB */
-  --c-accent: 15 148 136;           /* #0F9488 */
-  --c-success: 21 128 61;           /* #15803D */
-  --c-warning: 161 98 7;            /* #A16207 */
+  --c-primary: 29 78 216;           /* #1D4ED8（白字按钮约 6.7:1；浅蓝底文字约 6.0:1） */
+  --c-accent: 15 118 110;           /* #0F766E（浅色背景上的文字与描边） */
+  --c-success: 22 101 52;           /* #166534 */
+  --c-warning: 133 77 14;           /* #854D0E */
 }
 
 .dark {
@@ -31,9 +31,13 @@
   --c-surface: 17 24 39;            /* #111827 */
   --c-surface-muted: 23 32 51;      /* #172033 */
   --c-text-primary: 243 244 246;    /* #F3F4F6 */
-  --c-text-secondary: 156 163 175;  /* #9CA3AF */
-  --c-text-muted: 152 166 188;      /* #98A6BC（深底约 6.5:1，满足 AA） */
+  --c-text-secondary: 156 163 175;  /* #9CA3AF（深底约 7.4:1） */
+  --c-text-muted: 152 166 188;      /* #98A6BC（深底约 6.5:1） */
   --c-border: 41 53 72;             /* #293548 */
+  /* 品牌色在暗色下需要提亮才能作为文字使用；主按钮仍是深蓝底白字 */
+  --c-accent: 45 212 191;           /* #2DD4BF（深底约 10:1） */
+  --c-success: 74 222 128;          /* #4ADE80 */
+  --c-warning: 251 191 36;          /* #FBBF24 */
 }
 
 @theme inline {
@@ -53,7 +57,14 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-html { scroll-behavior: smooth; }
+/* ==========================================================================
+   基础排版与全站交互
+   ========================================================================== */
+html {
+  scroll-behavior: smooth;
+  /* 固定顶栏约 74px + 呼吸空间：锚点与跳过链接落点不被遮挡 */
+  scroll-padding-top: 6rem;
+}
 
 body {
   background-color: rgb(var(--c-background));
@@ -63,9 +74,33 @@ body {
   transition: background-color 0.3s, color 0.3s;
 }
 
+h1, h2, h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+::selection {
+  background-color: rgb(var(--c-primary));
+  color: #fff;
+}
+
 :focus-visible {
   outline: 2px solid rgb(var(--c-primary));
-  outline-offset: 2px;
+  outline-offset: 3px;
+}
+
+/* 跳过链接把焦点移到 main 后，不再给整页画一圈焦点框；
+   跳转控件本身在获得键盘焦点时仍有清晰轮廓。 */
+main:focus {
+  outline: none;
+}
+
+/* 所有锚点目标统一预留顶栏高度（scroll-padding 兼容性兜底） */
+[id] {
+  scroll-margin-top: 6rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -75,27 +110,255 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }
 
-/* 长文阅读区：宽度上限约 760px，避免大屏下横向过长 */
-.content-body { max-width: 760px; margin: 0 auto; }
-.content-body h1 { font-size: 2rem; font-weight: 700; color: rgb(var(--c-text-primary)); margin-top: 2rem; margin-bottom: 1rem; line-height: 1.3; }
-.content-body h2 { font-size: 1.5rem; font-weight: 600; color: rgb(var(--c-text-primary)); margin-top: 1.75rem; margin-bottom: 0.75rem; line-height: 1.3; padding-bottom: 0.5rem; border-bottom: 1px solid rgb(var(--c-border)); }
-.content-body h3 { font-size: 1.25rem; font-weight: 600; color: rgb(var(--c-text-primary)); margin-top: 1.5rem; margin-bottom: 0.5rem; line-height: 1.3; }
-.content-body h4 { font-size: 1.1rem; font-weight: 600; color: rgb(var(--c-text-primary)); margin-top: 1.25rem; margin-bottom: 0.5rem; line-height: 1.4; }
-.content-body hr { border: 0; border-top: 1px solid rgb(var(--c-border)); margin-top: 2rem; margin-bottom: 2rem; }
+/* ==========================================================================
+   复用组件：容器、按钮、卡片、标签
+   仅收敛重复样式，不替代 Tailwind 工具类；页面仍可就近微调。
+   ========================================================================== */
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-shell {
+    @apply py-14 sm:py-16 lg:py-20;
+  }
+
+  .section-heading {
+    @apply text-2xl font-bold tracking-tight text-text-primary sm:text-3xl;
+  }
+
+  .section-copy {
+    @apply mt-3 max-w-2xl text-sm leading-relaxed text-text-secondary sm:text-base;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.16em] text-primary dark:text-accent;
+  }
+
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors duration-150;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary/90;
+  }
+
+  .btn-secondary {
+    @apply border border-border bg-surface text-text-primary hover:border-primary/30 hover:bg-surface-muted;
+  }
+
+  .btn-ghost {
+    @apply text-text-secondary hover:bg-surface-muted hover:text-text-primary;
+  }
+
+  .surface-card {
+    @apply rounded-xl border border-border bg-surface;
+  }
+
+  .muted-card {
+    @apply rounded-xl border border-border bg-surface-muted/70;
+  }
+
+  .text-link {
+    @apply inline-flex items-center gap-1 text-sm font-medium text-primary underline-offset-4 hover:underline dark:text-accent;
+  }
+
+  .meta-label {
+    @apply text-xs font-medium uppercase tracking-[0.12em] text-text-muted;
+  }
+}
+
+/* ==========================================================================
+   长文阅读区
+   - 正文宽度上限约 760px，避免大屏下横向过长。
+   - 表格、代码块仅自身横向滚动，绝不让整页产生横向溢出。
+   ========================================================================== */
+.content-body {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  overflow-wrap: break-word;
+}
+.content-body > :first-child { margin-top: 0; }
+.content-body h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: rgb(var(--c-text-primary));
+  margin-top: 2.25rem;
+  margin-bottom: 1rem;
+  line-height: 1.3;
+}
+.content-body h2 {
+  font-size: 1.5rem;
+  font-weight: 650;
+  color: rgb(var(--c-text-primary));
+  margin-top: 2.5rem;
+  margin-bottom: 0.875rem;
+  line-height: 1.35;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgb(var(--c-border));
+  scroll-margin-top: 6rem;
+}
+.content-body h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: rgb(var(--c-text-primary));
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.45;
+  scroll-margin-top: 6rem;
+}
+.content-body h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: rgb(var(--c-text-primary));
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+.content-body hr {
+  border: 0;
+  border-top: 1px solid rgb(var(--c-border));
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
 .content-body strong { color: rgb(var(--c-text-primary)); font-weight: 600; }
-.content-body p { margin-top: 1rem; margin-bottom: 1rem; line-height: 1.75; color: rgb(var(--c-text-secondary)); }
-.content-body ul, .content-body ol { margin-top: 1rem; margin-bottom: 1rem; margin-left: 1.5rem; padding-left: 1rem; line-height: 1.75; color: rgb(var(--c-text-secondary)); }
-.content-body li { margin-bottom: 0.5rem; }
-.content-body table { display: block; overflow-x: auto; max-width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 1rem; font-size: 0.95rem; }
-.content-body th, .content-body td { padding: 0.75rem 1rem; border: 1px solid rgb(var(--c-border)); text-align: left; }
-.content-body th { background-color: rgb(var(--c-surface-muted)); font-weight: 600; color: rgb(var(--c-text-primary)); }
-.content-body tr:nth-child(even) { background-color: rgb(var(--c-surface-muted)); }
-.content-body pre { background-color: rgb(var(--c-surface-muted)); padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin-top: 1rem; margin-bottom: 1rem; font-size: 0.9rem; }
-.content-body code { font-size: 0.9em; padding: 0.15rem 0.4rem; border-radius: 0.25rem; background-color: rgb(var(--c-surface-muted)); color: rgb(var(--c-primary)); }
-.content-body pre code { padding: 0; background-color: transparent; color: inherit; font-size: inherit; }
-.content-body a { color: rgb(var(--c-primary)); text-decoration: underline; }
+.content-body p {
+  margin-top: 0.9rem;
+  margin-bottom: 0.9rem;
+  line-height: 1.8;
+  color: rgb(var(--c-text-secondary));
+}
+.content-body ul, .content-body ol {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  padding-left: 1.4rem;
+  line-height: 1.8;
+  color: rgb(var(--c-text-secondary));
+}
+.content-body ul { list-style: disc; }
+.content-body ol { list-style: decimal; }
+.content-body li { margin-bottom: 0.4rem; padding-left: 0.2rem; }
+.content-body li::marker { color: rgb(var(--c-primary)); }
+.content-body li > p { margin-top: 0.25rem; margin-bottom: 0.25rem; }
+.content-body li > ul, .content-body li > ol { margin-top: 0.35rem; margin-bottom: 0.35rem; }
+.content-body table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin-top: 1.25rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.925rem;
+  -webkit-overflow-scrolling: touch;
+}
+.content-body th, .content-body td {
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgb(var(--c-border));
+  text-align: left;
+  vertical-align: top;
+}
+.content-body th {
+  background-color: rgb(var(--c-surface-muted));
+  font-weight: 600;
+  color: rgb(var(--c-text-primary));
+  white-space: nowrap;
+}
+.content-body tr:nth-child(even) { background-color: rgb(var(--c-surface-muted) / 0.55); }
+.content-body pre {
+  max-width: 100%;
+  background-color: rgb(var(--c-surface-muted));
+  border: 1px solid rgb(var(--c-border));
+  padding: 1rem 1.1rem;
+  border-radius: 0.625rem;
+  overflow-x: auto;
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  tab-size: 2;
+  -webkit-overflow-scrolling: touch;
+}
+.content-body code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  background-color: rgb(var(--c-surface-muted));
+  color: rgb(var(--c-text-primary));
+  overflow-wrap: anywhere;
+}
+.content-body pre code {
+  padding: 0;
+  background-color: transparent;
+  color: inherit;
+  font-size: inherit;
+  overflow-wrap: normal;
+  white-space: pre;
+}
+.content-body a {
+  color: rgb(var(--c-primary));
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+.content-body a:hover { text-decoration-thickness: 2px; }
 .dark .content-body a { color: rgb(var(--c-accent)); }
-.content-body img { max-width: 100%; height: auto; border-radius: 0.5rem; border: 1px solid rgb(var(--c-border)); margin-top: 1rem; margin-bottom: 1rem; }
-.content-body blockquote { border-left: 3px solid rgb(var(--c-primary)); padding: 0.75rem 1rem; margin-top: 1rem; margin-bottom: 1rem; background-color: rgb(var(--c-surface-muted)); border-radius: 0 0.5rem 0.5rem 0; }
+.content-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.625rem;
+  border: 1px solid rgb(var(--c-border));
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.content-body blockquote {
+  border-left: 3px solid rgb(var(--c-primary));
+  padding: 0.85rem 1rem;
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+  background-color: rgb(var(--c-surface-muted));
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+.content-body blockquote p { margin: 0; color: rgb(var(--c-text-secondary)); }
+.content-body blockquote > :first-child { margin-top: 0; }
+.content-body blockquote > :last-child { margin-bottom: 0; }
+
+@media (max-width: 640px) {
+  .content-body h1 { font-size: 1.75rem; }
+  .content-body h2 { font-size: 1.35rem; margin-top: 2rem; }
+  .content-body h3 { font-size: 1.12rem; }
+  .content-body p { line-height: 1.75; }
+  .content-body th, .content-body td { padding: 0.6rem 0.7rem; }
+}
+
+/* 项目详情内的作品正文：页面已有「项目概览」章节标题，
+   正文中的 h2 降为二级内容，避免与页面章节标题争夺视觉层级。 */
+.content-body.content-body--compact h2 {
+  font-size: 1.2rem;
+  margin-top: 2rem;
+  margin-bottom: 0.65rem;
+  padding-bottom: 0.35rem;
+  border-bottom-color: rgb(var(--c-border) / 0.7);
+}
+.content-body.content-body--compact h3 {
+  font-size: 1.02rem;
+  margin-top: 1.4rem;
+}
+.content-body.content-body--compact p,
+.content-body.content-body--compact li {
+  font-size: 0.95rem;
+}
+
+@media (max-width: 640px) {
+  .content-body.content-body--compact h2 { font-size: 1.1rem; }
+  .content-body.content-body--compact h3 { font-size: 0.98rem; }
+}

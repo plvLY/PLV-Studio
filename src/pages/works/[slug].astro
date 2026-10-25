@@ -1,11 +1,13 @@
 ---
 import Layout from "../../layouts/Layout.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
 import WorkStatusBadge from "../../components/WorkStatusBadge.astro";
 import TechStackTags from "../../components/TechStackTags.astro";
 import DocumentCard from "../../components/DocumentCard.astro";
 import ProgressTimeline from "../../components/ProgressTimeline.astro";
 import { getCollection, render, type CollectionEntry } from "astro:content";
-import { sortByLifecycle } from "../../lib/documents";
+import { sortByLifecycle, docTypeLabel } from "../../lib/documents";
+import { publicStatusLabel, workTypeLabel } from "../../lib/works";
 import { progress } from "../../data/progress";
 
 interface Props {
@@ -31,133 +33,315 @@ const docEntries = await getCollection("documents", ({ id }) => id.startsWith(`$
 const workDocs = sortByLifecycle(docEntries.map((d) => ({ docId: d.id.split("/")[1], ...d.data })));
 const workProgress = progress[slug] ?? [];
 
-// 外部入口：链接不存在时不显示空按钮（符合"真实可信"原则）
-const externalLinks = [
-  { url: work.demoUrl, label: "在线演示" },
-  { url: work.sourceUrl, label: "源码仓库" },
-  { url: work.videoUrl, label: "演示视频" },
-].filter((l) => l.url);
+// 验收与发布：只展示真实进度数据中存在的阶段，不另造一份验收结论
+const releaseEntries = workProgress.filter((item) =>
+  ["测试验收", "发布部署", "发布迭代"].includes(item.stage),
+);
 
-const typeLabels: Record<string, string> = {
-  "ai-application": "AI 应用",
-  "developer-tool": "开发者工具",
-  "data-visualization": "数据可视化",
-  "tech-experiment": "技术实验",
-};
+const latestUpdate =
+  [work.updatedAt, ...workProgress.map((item) => item.updatedAt)].sort().at(-1) ?? work.updatedAt;
+const statusText = publicStatusLabel(work.status, work.demoUrl);
+const publishedTypes = [...new Set(workDocs.map((doc) => docTypeLabel(doc.type)))];
+
+// 外部入口：链接不存在时不显示空按钮（符合「真实可信」原则）
+const externalLinks = [
+  { url: work.demoUrl, label: "在线演示", hint: "Netlify" },
+  { url: work.sourceUrl, label: "源码仓库", hint: "GitHub" },
+  { url: work.videoUrl, label: "演示视频", hint: "视频" },
+].filter((link) => link.url);
+
+const pageSections = [
+  { id: "overview", label: "项目概览" },
+  { id: "documents", label: "设计文档" },
+  { id: "progress", label: "开发进度" },
+  { id: "release", label: "验收与上线" },
+];
+
+const description = `${work.title}：${work.summary}`;
 ---
 
-<Layout title={work.title} description={work.summary}>
-  <nav class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mb-6" aria-label="面包屑导航">
-    <ol class="breadcrumbs flex flex-wrap items-center gap-2 text-sm text-text-secondary">
-      <li><a href="/" class="hover:text-primary transition-colors">首页</a></li>
-      <li aria-hidden="true">/</li>
-      <li><a href="/works/" class="hover:text-primary transition-colors">作品</a></li>
-      <li aria-hidden="true">/</li>
-      <li class="text-text-primary" aria-current="page">{work.title}</li>
-    </ol>
-  </nav>
+<Layout title={work.title} description={description} image={work.cover || undefined} ogType="article">
+  <div class="container-page pb-16 pt-6 sm:pt-8">
+    <Breadcrumbs
+      items={[
+        { label: "首页", href: "/" },
+        { label: "作品", href: "/works/" },
+        { label: work.title },
+      ]}
+    />
 
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-    <!-- 项目头部：标题为视觉焦点，状态/元信息为辅助 -->
-    <header class="mb-10">
-      <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-6 mb-6">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-3 mb-3 flex-wrap">
-            <h1 class="text-3xl sm:text-4xl font-bold text-text-primary tracking-tight">
-              {work.title}
-            </h1>
-            <WorkStatusBadge status={work.status} size="md" />
-          </div>
-          <p class="text-lg text-text-secondary leading-relaxed max-w-2xl">{work.summary}</p>
-          <div class="flex flex-wrap gap-x-4 gap-y-1 mt-4 text-sm text-text-secondary">
-            <span>类型：{typeLabels[work.type] ?? work.type}</span>
-            <span>开始时间：{work.startedAt}</span>
-            <span>最近更新：{work.updatedAt}</span>
-          </div>
+    <!-- 项目头部：先回答「是什么、做到什么程度、去哪里看」，再进入长文 -->
+    <header class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-start lg:gap-12">
+      <div class="min-w-0">
+        <p class="eyebrow">作品档案 · {workTypeLabel(work.type)}</p>
+        <div class="mt-3 flex flex-wrap items-center gap-3">
+          <h1 class="text-3xl font-bold tracking-tight text-text-primary sm:text-4xl lg:text-5xl">
+            {work.title}
+          </h1>
+          <WorkStatusBadge status={work.status} size="md" label={statusText} />
         </div>
-        {work.cover ? (
-          <img
-            src={work.cover}
-            alt={work.title + " 封面"}
-            class="w-full lg:w-80 aspect-video object-cover rounded-xl border border-border shrink-0"
-            width="785"
-            height="442"
-          />
-        ) : null}
+        <p class="mt-4 max-w-2xl text-base leading-relaxed text-text-secondary sm:text-lg">
+          {work.summary}
+        </p>
+
+        <div class="mt-6 flex flex-wrap items-center gap-3">
+          {work.demoUrl && (
+            <a
+              href={work.demoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn btn-primary"
+            >
+              访问在线站点
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M7 17 17 7"></path>
+                <path d="M7 7h10v10"></path>
+              </svg>
+              <span class="sr-only">（在新标签页打开）</span>
+            </a>
+          )}
+          <a href="#documents" class="btn btn-secondary">阅读设计文档</a>
+          <a href="#progress" class="btn btn-ghost">查看开发记录</a>
+        </div>
+
+        <dl class="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-4">
+          <div class="bg-surface px-4 py-3.5">
+            <dt class="text-xs text-text-muted">当前状态</dt>
+            <dd class="mt-1 text-sm font-semibold text-text-primary">{statusText}</dd>
+          </div>
+          <div class="bg-surface px-4 py-3.5">
+            <dt class="text-xs text-text-muted">公开文档</dt>
+            <dd class="mt-1 text-sm font-semibold tabular-nums text-text-primary">{workDocs.length} 份</dd>
+          </div>
+          <div class="bg-surface px-4 py-3.5">
+            <dt class="text-xs text-text-muted">开发记录</dt>
+            <dd class="mt-1 text-sm font-semibold tabular-nums text-text-primary">{workProgress.length} 条</dd>
+          </div>
+          <div class="bg-surface px-4 py-3.5">
+            <dt class="text-xs text-text-muted">最近更新</dt>
+            <dd class="mt-1 text-sm font-semibold tabular-nums text-text-primary">
+              <time datetime={latestUpdate}>{latestUpdate}</time>
+            </dd>
+          </div>
+        </dl>
       </div>
+
+      {work.cover && (
+        <figure class="min-w-0">
+          <a
+            href={work.demoUrl || "#overview"}
+            target={work.demoUrl ? "_blank" : undefined}
+            rel={work.demoUrl ? "noopener noreferrer" : undefined}
+            class="group block overflow-hidden rounded-xl border border-border bg-surface p-2 transition-colors hover:border-primary/35"
+            aria-label={work.demoUrl ? `在新标签页打开 ${work.title} 在线站点` : `${work.title} 封面截图`}
+          >
+            <img
+              src={work.cover}
+              alt={`${work.title} 首页运行截图`}
+              width="1440"
+              height="810"
+              class="aspect-video w-full rounded-lg object-cover object-top transition-transform duration-300 group-hover:scale-[1.01] motion-reduce:transform-none"
+              loading="eager"
+              fetchpriority="high"
+              decoding="async"
+            />
+          </a>
+          <figcaption class="mt-2.5 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-text-secondary">
+            <span>真实运行截图 · 首页</span>
+            <span>开始于 <time datetime={work.startedAt}>{work.startedAt}</time></span>
+          </figcaption>
+        </figure>
+      )}
     </header>
 
-    <div class="grid lg:grid-cols-3 gap-8">
-      <!-- 主内容区（约 2/3）：介绍 → 文档 → 进度 -->
-      <div class="lg:col-span-2 min-w-0 space-y-10">
-        <!-- 项目介绍（渲染该作品自己的 content，而非全站共用文案） -->
-        <section class="space-y-4">
-          <h2 class="text-xl font-bold text-text-primary border-b border-border pb-2">
-            项目介绍
-          </h2>
-          <div class="content-body text-left">
+    <!-- 移动端目录：避免长页面只能依赖浏览器返回 -->
+    <details class="surface-card mt-8 p-4 lg:hidden">
+      <summary class="cursor-pointer text-sm font-semibold text-text-primary">本页目录</summary>
+      <ul class="mt-3 grid grid-cols-2 gap-1.5 text-sm">
+        {pageSections.map((section) => (
+          <li>
+            <a href={`#${section.id}`} class="flex min-h-9 items-center rounded-md px-2 text-text-secondary hover:bg-surface-muted hover:text-primary dark:hover:text-accent">
+              {section.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </details>
+
+    <div class="mt-10 grid gap-10 lg:grid-cols-12 lg:gap-12">
+      <!-- 主内容：概览 → 文档 → 进度 → 验收发布 -->
+      <div class="min-w-0 space-y-12 lg:col-span-8">
+        <section id="overview" aria-labelledby="overview-title" class="scroll-mt-24">
+          <div class="flex items-baseline gap-3 border-b border-border pb-3">
+            <span class="text-xs font-semibold tabular-nums text-text-muted" aria-hidden="true">01</span>
+            <h2 id="overview-title" class="text-xl font-bold text-text-primary">项目概览</h2>
+          </div>
+          <div class="content-body content-body--compact mt-6">
             <Content />
           </div>
         </section>
 
-        <!-- 设计文档 -->
-        <section class="space-y-4">
-          <h2 class="text-xl font-bold text-text-primary border-b border-border pb-2">
-            设计文档
-          </h2>
+        <section id="documents" aria-labelledby="documents-title" class="scroll-mt-24">
+          <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-border pb-3">
+            <div class="flex items-baseline gap-3">
+              <span class="text-xs font-semibold tabular-nums text-text-muted" aria-hidden="true">02</span>
+              <h2 id="documents-title" class="text-xl font-bold text-text-primary">设计文档</h2>
+            </div>
+            <p class="text-xs text-text-muted">按开发节点排序 · 共 {workDocs.length} 份</p>
+          </div>
+
           {workDocs.length > 0 ? (
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               {workDocs.map((doc) => (
                 <DocumentCard doc={doc} docId={doc.docId} workSlug={work.slug} />
               ))}
             </div>
           ) : (
-            <p class="text-text-secondary">暂无设计文档</p>
+            <p class="mt-6 rounded-xl border border-dashed border-border px-5 py-10 text-center text-sm text-text-secondary">
+              暂无公开设计文档
+            </p>
           )}
+
+          <p class="mt-5 text-sm leading-relaxed text-text-secondary">
+            当前公开文档覆盖：{publishedTypes.length > 0 ? publishedTypes.join("、") : "暂无"}。
+            测试验收与发布记录见下方开发进度；复盘文档尚未单独发布，不以空文档占位。
+          </p>
+
+          <a href={`/works/${slug}/documents/`} class="text-link mt-4">
+            查看完整文档列表
+            <span aria-hidden="true">→</span>
+          </a>
         </section>
 
-        <!-- 开发进度 -->
-        <ProgressTimeline entries={workProgress} />
+        <ProgressTimeline
+          entries={workProgress}
+          index="03"
+          description="按实际更新时间记录每个阶段的完成事项、当前问题与下一步；这是项目状态，不是通用流程。"
+        />
+
+        <section id="release" aria-labelledby="release-title" class="scroll-mt-24">
+          <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-border pb-3">
+            <div class="flex items-baseline gap-3">
+              <span class="text-xs font-semibold tabular-nums text-text-muted" aria-hidden="true">04</span>
+              <h2 id="release-title" class="text-xl font-bold text-text-primary">验收与上线</h2>
+            </div>
+            <p class="text-xs text-text-muted">来源：开发记录</p>
+          </div>
+
+          {releaseEntries.length > 0 ? (
+            <div class="mt-6 grid gap-4 sm:grid-cols-2">
+              {releaseEntries.map((item) => (
+                <article class="surface-card flex h-full flex-col p-5">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h3 class="font-semibold text-text-primary">{item.stage}</h3>
+                    <time datetime={item.updatedAt} class="text-xs tabular-nums text-text-muted">{item.updatedAt}</time>
+                  </div>
+                  <ul class="mt-3 space-y-2 text-sm text-text-secondary">
+                    {item.completedItems.map((completed) => (
+                      <li class="flex items-start gap-2">
+                        <span class="mt-2 h-1 w-1 shrink-0 rounded-full bg-success" aria-hidden="true"></span>
+                        <span>{completed}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p class="mt-6 rounded-xl border border-dashed border-border px-5 py-10 text-center text-sm text-text-secondary">
+              尚未记录测试验收或发布阶段
+            </p>
+          )}
+
+          <div class="muted-card mt-5 p-5">
+            <h3 class="text-sm font-semibold text-text-primary">维护与复盘</h3>
+            <p class="mt-2 text-sm leading-relaxed text-text-secondary">
+              站点已进入正式运行，后续以内容维护与小幅迭代为主。复盘文档尚未单独发布；
+              当前结论以设计文档与开发记录为准，不补写未发生的验收结果。
+            </p>
+          </div>
+        </section>
+
+        <div class="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6">
+          <a href="/works/" class="btn btn-secondary">← 返回作品列表</a>
+          {work.demoUrl && (
+            <a href={work.demoUrl} target="_blank" rel="noopener noreferrer" class="text-link">
+              打开在线站点
+              <span aria-hidden="true">↗</span>
+              <span class="sr-only">（在新标签页打开）</span>
+            </a>
+          )}
+        </div>
       </div>
 
-      <!-- 辅助信息区（约 1/3）：技术栈、项目状态、时间与相关入口 -->
-      <aside class="lg:col-span-1 min-w-0 space-y-6">
-        <div class="bg-surface rounded-xl border border-border p-6 sticky top-24">
-          <h3 class="font-semibold text-text-primary mb-4">技术栈</h3>
-          <TechStackTags tags={work.techStack} />
+      <!-- 侧栏：目录、事实、技术栈与外部入口；移动端排在正文之后 -->
+      <aside class="min-w-0 lg:col-span-4">
+        <div class="space-y-6 lg:sticky lg:top-24">
+          <nav class="surface-card hidden p-5 lg:block" aria-labelledby="page-toc-title">
+            <h2 id="page-toc-title" class="meta-label">本页目录</h2>
+            <ul class="mt-3 space-y-1 border-l border-border">
+              {pageSections.map((section) => (
+                <li>
+                  <a
+                    href={`#${section.id}`}
+                    class="-ml-px block border-l border-transparent py-1.5 pl-4 text-sm text-text-secondary transition-colors hover:border-primary hover:text-primary dark:hover:border-accent dark:hover:text-accent"
+                  >
+                    {section.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
-          <h3 class="font-semibold text-text-primary mt-6 mb-4">项目信息</h3>
-          <dl class="space-y-3 text-sm">
-            <div class="flex justify-between border-b border-border pb-2">
-              <dt class="text-text-secondary">当前状态</dt>
-              <dd><WorkStatusBadge status={work.status} /></dd>
+          <div class="surface-card p-5">
+            <h2 class="meta-label">技术栈</h2>
+            <div class="mt-3">
+              <TechStackTags tags={work.techStack} />
             </div>
-            <div class="flex justify-between border-b border-border pb-2">
-              <dt class="text-text-secondary">作品类型</dt>
-              <dd class="text-text-primary">{typeLabels[work.type] ?? work.type}</dd>
-            </div>
-            <div class="flex justify-between border-b border-border pb-2">
-              <dt class="text-text-secondary">开始时间</dt>
-              <dd class="text-text-primary">{work.startedAt}</dd>
-            </div>
-            <div class="flex justify-between border-b border-border pb-2">
-              <dt class="text-text-secondary">最近更新</dt>
-              <dd class="text-text-primary">{work.updatedAt}</dd>
-            </div>
-          </dl>
+          </div>
+
+          <div class="surface-card p-5">
+            <h2 class="meta-label">项目事实</h2>
+            <dl class="mt-3 space-y-3 text-sm">
+              <div class="flex items-start justify-between gap-4 border-b border-border/70 pb-3">
+                <dt class="text-text-secondary">作品类型</dt>
+                <dd class="text-right font-medium text-text-primary">{workTypeLabel(work.type)}</dd>
+              </div>
+              <div class="flex items-start justify-between gap-4 border-b border-border/70 pb-3">
+                <dt class="text-text-secondary">开始时间</dt>
+                <dd class="text-right tabular-nums text-text-primary">{work.startedAt}</dd>
+              </div>
+              <div class="flex items-start justify-between gap-4 border-b border-border/70 pb-3">
+                <dt class="text-text-secondary">最近更新</dt>
+                <dd class="text-right tabular-nums text-text-primary">{latestUpdate}</dd>
+              </div>
+              <div class="flex items-start justify-between gap-4">
+                <dt class="text-text-secondary">当前状态</dt>
+                <dd class="text-right font-medium text-text-primary">{statusText}</dd>
+              </div>
+            </dl>
+          </div>
+
           {externalLinks.length > 0 && (
-            <div class="mt-4">
-              <h4 class="font-semibold text-text-primary mb-2">外部入口</h4>
-              <ul class="space-y-2">
+            <div class="surface-card p-5">
+              <h2 class="meta-label">外部入口</h2>
+              <ul class="mt-3 space-y-2">
                 {externalLinks.map((link) => (
                   <li>
                     <a
                       href={link.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="block text-sm text-primary hover:underline font-medium"
+                      class="group flex min-h-10 items-center justify-between gap-3 rounded-md text-sm transition-colors hover:text-primary dark:hover:text-accent"
                     >
-                      {link.label} ↗
+                      <span class="font-medium text-text-primary transition-colors group-hover:text-primary dark:group-hover:text-accent">
+                        {link.label}
+                      </span>
+                      <span class="flex items-center gap-1.5 text-xs text-text-muted">
+                        {link.hint}
+                        <span aria-hidden="true">↗</span>
+                      </span>
+                      <span class="sr-only">（在新标签页打开）</span>
                     </a>
                   </li>
                 ))}

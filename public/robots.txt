@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://plvstudio.netlify.app/sitemap.xml

@@ -19,35 +19,39 @@ const href = `/works/${workSlug}/documents/${docId}/`;
 {variant === "row" ? (
   <a
     href={href}
-    class="document-card group flex flex-wrap items-center gap-x-4 gap-y-1 py-4 transition-colors hover:bg-surface-muted/60 rounded-lg px-3 -mx-3"
+    class="document-card group -mx-3 flex min-h-16 flex-wrap items-center gap-x-4 gap-y-2 rounded-lg px-3 py-4 transition-colors hover:bg-surface-muted/60"
   >
-    <h2 class="text-base font-semibold text-text-primary group-hover:text-primary dark:group-hover:text-accent min-w-0">
+    <h2 class="min-w-0 text-base font-semibold text-text-primary transition-colors group-hover:text-primary dark:group-hover:text-accent">
       {doc.title}
     </h2>
-    <span class="text-xs font-medium text-primary px-2 py-0.5 rounded bg-primary/10 border border-primary/20 shrink-0">
+    <span class="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary dark:text-accent">
       {docTypeLabel(doc.type)}
     </span>
-    <span class="text-xs text-text-secondary ml-auto shrink-0">
-      版本 {doc.version} · 更新 {doc.updatedAt}
+    <span class="w-full text-xs text-text-secondary sm:ml-auto sm:w-auto sm:shrink-0">
+      版本 {doc.version} · 更新 <time datetime={doc.updatedAt}>{doc.updatedAt}</time>
+    </span>
+    <span class="hidden text-sm text-text-muted transition-transform duration-150 group-hover:translate-x-0.5 motion-reduce:transform-none sm:inline" aria-hidden="true">
+      →
     </span>
   </a>
 ) : (
-  <div class="document-card p-4 rounded-xl border border-border bg-surface hover:border-primary/40 transition-colors">
-    <div class="flex justify-between items-start mb-2 gap-2">
-      <h3 class="text-base font-semibold text-text-primary">{doc.title}</h3>
-      <span class="text-xs font-medium text-primary px-2 py-0.5 rounded bg-primary/10 border border-primary/20 shrink-0">
+  <article class="document-card flex h-full flex-col rounded-xl border border-border bg-surface p-4 transition-colors hover:border-primary/40">
+    <div class="flex items-start justify-between gap-2">
+      <h3 class="min-w-0 text-base font-semibold text-text-primary">
+        <a href={href} class="underline-offset-4 hover:text-primary hover:underline dark:hover:text-accent">
+          {doc.title}
+        </a>
+      </h3>
+      <span class="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary dark:text-accent">
         {docTypeLabel(doc.type)}
       </span>
     </div>
-    <p class="text-sm text-text-secondary mb-3 line-clamp-2">{doc.summary}</p>
-    <div class="flex items-center justify-between text-xs text-text-secondary gap-2">
-      <span>版本：{doc.version} · 更新：{doc.updatedAt}</span>
-      <a
-        href={href}
-        class="text-primary hover:underline font-medium shrink-0"
-      >
+    <p class="mt-2 line-clamp-2 flex-1 text-sm leading-relaxed text-text-secondary">{doc.summary}</p>
+    <div class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border/70 pt-3 text-xs text-text-secondary">
+      <span>版本 {doc.version} · 更新 <time datetime={doc.updatedAt}>{doc.updatedAt}</time></span>
+      <a href={href} class="font-medium text-primary underline-offset-4 hover:underline dark:text-accent">
         阅读文档 →
       </a>
     </div>
-  </div>
+  </article>
 )}

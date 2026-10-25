@@ -1,0 +1,101 @@
+---
+import type { CollectionEntry } from "astro:content";
+import TechStackTags from "./TechStackTags.astro";
+import { publicStatusLabel, workTypeLabel } from "../lib/works";
+
+interface Props {
+  /** works 集合条目映射为 { slug, ...frontmatter } 后的形状 */
+  work: { slug: string } & CollectionEntry<"works">["data"];
+  docCount: number;
+  progressCount: number;
+}
+
+const { work, docCount, progressCount } = Astro.props;
+const detailHref = `/works/${work.slug}/`;
+const documentsHref = `${detailHref}documents/`;
+const statusText = publicStatusLabel(work.status, work.demoUrl);
+---
+
+<article class="group overflow-hidden rounded-2xl border border-border bg-surface shadow-sm transition-colors hover:border-primary/35">
+  <div class="grid lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
+    <!-- 真实运行截图：不使用设计稿或库存图填充 -->
+    <figure class="flex flex-col bg-surface-muted/60 p-3 sm:p-4">
+      <a
+        href={detailHref}
+        class="block overflow-hidden rounded-xl border border-border bg-surface"
+        aria-label={`查看 ${work.title} 项目详情`}
+      >
+        {work.cover ? (
+          <img
+            src={work.cover}
+            alt={`${work.title} 首页运行截图`}
+            width="1440"
+            height="810"
+            class="aspect-video w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.015] motion-reduce:transform-none"
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <div class="flex aspect-video w-full items-center justify-center text-sm text-text-secondary">
+            暂无项目截图
+          </div>
+        )}
+      </a>
+      <figcaption class="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-text-muted">
+        <span>真实运行截图 · 首页</span>
+        <span class="tabular-nums">01 / 精选作品</span>
+      </figcaption>
+    </figure>
+
+    <div class="flex flex-col p-6 sm:p-8 lg:p-10">
+      <div class="flex flex-wrap items-center gap-2.5">
+        <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-2.5 py-1 text-xs font-medium text-text-secondary">
+          <span class="h-1.5 w-1.5 rounded-full bg-success" aria-hidden="true"></span>
+          {statusText}
+        </span>
+        <span class="rounded-full border border-border px-2.5 py-1 text-xs text-text-secondary">
+          {workTypeLabel(work.type)}
+        </span>
+        <span class="text-xs text-text-muted">本站自身</span>
+      </div>
+
+      <h3 class="mt-4 text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
+        <a href={detailHref} class="underline-offset-4 hover:underline">{work.title}</a>
+      </h3>
+      <p class="mt-3 text-sm leading-relaxed text-text-secondary sm:text-base">{work.summary}</p>
+
+      <div class="mt-5">
+        <TechStackTags tags={work.techStack} />
+      </div>
+
+      <div class="mt-auto flex flex-wrap items-center gap-3 pt-7">
+        <a href={detailHref} class="btn btn-primary">
+          查看项目
+          <span aria-hidden="true">→</span>
+        </a>
+        <a href={documentsHref} class="btn btn-secondary">
+          设计文档
+          <span class="text-text-muted" aria-hidden="true">{docCount}</span>
+          <span class="sr-only">（共 {docCount} 份）</span>
+        </a>
+        <a href={`${detailHref}#progress`} class="text-link">开发记录</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 真实统计：文案与数字均来自内容集合 / 进度数据 -->
+  <dl class="grid grid-cols-3 divide-x divide-border border-t border-border bg-surface-muted/40">
+    <div class="px-3 py-4 text-center sm:px-5">
+      <dt class="text-xs text-text-muted">设计文档</dt>
+      <dd class="mt-1 text-base font-semibold tabular-nums text-text-primary">{docCount} 份</dd>
+    </div>
+    <div class="px-3 py-4 text-center sm:px-5">
+      <dt class="text-xs text-text-muted">开发记录</dt>
+      <dd class="mt-1 text-base font-semibold tabular-nums text-text-primary">{progressCount} 条</dd>
+    </div>
+    <div class="px-3 py-4 text-center sm:px-5">
+      <dt class="text-xs text-text-muted">当前状态</dt>
+      <dd class="mt-1 text-base font-semibold text-text-primary">{statusText}</dd>
+    </div>
+  </dl>
+</article>

@@ -1,15 +1,22 @@
 ---
-// 方案 2：页脚移除站内导航（与 sticky 顶部导航重复），只保留品牌 ｜ 联系 ｜ 版权
-// 站内跳转由常驻顶栏承担（全站任意位置一次点击可达），页脚专职品牌收尾与联系方式
-const tagline = "记录个人作品、设计文档、开发进度与技术实践。";
-
-const contactLinks = [
-  { href: "https://github.com/plvLY", label: "GitHub", icon: "github", external: true },
-  { href: "https://gitee.com/plv-coding", label: "Gitee", icon: "gitee", external: true },
-  { href: "mailto:837965182@qq.com", label: "837965182@qq.com", icon: "mail", external: false },
+// 页脚三组：品牌 / 站内导航 / 外部链接
+// 站内导航只保留「作品、文档、关于」三个补充入口，不重复顶部导航的完整结构。
+const siteLinks = [
+  { href: "/works/", label: "作品档案" },
+  { href: "/works/plv-studio/documents/", label: "设计文档" },
+  { href: "/about/", label: "关于与工作方式" },
 ];
 
-// 描边风格图标（2px stroke），与站内 clock/menu 图标同一套
+const externalLinks = [
+  { href: "https://github.com/plvLY", label: "GitHub", icon: "github" },
+  { href: "https://gitee.com/plv-coding", label: "Gitee", icon: "gitee" },
+  {
+    href: "mailto:837965182@qq.com",
+    label: "837965182@qq.com",
+    icon: "mail",
+  },
+];
+
 const icons: Record<string, string> = {
   github:
     "M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21",
@@ -19,50 +26,85 @@ const icons: Record<string, string> = {
 };
 
 const linkClass =
-  "group inline-flex items-center gap-1.5 min-h-11 px-1 text-sm text-text-secondary hover:text-primary dark:hover:text-accent transition-colors duration-150";
+  "group inline-flex min-h-11 items-center gap-2 rounded-md text-sm text-text-secondary transition-colors hover:text-primary dark:hover:text-accent";
 ---
 
-<footer class="site-footer mt-auto border-t border-border bg-surface">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <!-- 单行：品牌 ｜ 联系（窄屏纵向堆叠、组内仍保持横排） -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-x-8 gap-y-1">
-      <!-- 品牌：名称与定位语同一行 -->
-      <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 min-w-0">
-        <span class="font-bold text-primary dark:text-accent">PLV Studio</span>
-        <span class="text-xs text-text-secondary">{tagline}</span>
+<footer class="mt-auto border-t border-border bg-surface">
+  <div class="container-page">
+    <div class="grid gap-x-8 gap-y-9 py-10 md:grid-cols-12 md:py-12">
+      <!-- 品牌区 -->
+      <div class="md:col-span-5">
+        <a
+          href="/"
+          class="inline-flex items-center gap-2 font-bold text-lg text-primary dark:text-accent"
+          aria-label="PLV Studio 首页"
+        >
+          <img src="/logo.png" alt="" class="h-7 w-7 rounded-full" width="250" height="250" />
+          <span>PLV Studio</span>
+        </a>
+        <p class="mt-3 max-w-sm text-sm leading-relaxed text-text-secondary">
+          记录真实项目从需求分析、产品设计、技术架构到开发验收的过程，以及每个阶段可追溯的文档与技术产物。
+        </p>
+        <p class="mt-3 text-xs text-text-muted">个人作品与技术实践</p>
       </div>
 
-      <!-- 联系：仓库主页与邮箱，图标 + 短标签横排 -->
-      <div class="flex flex-wrap items-center gap-x-5" role="group" aria-label="联系方式">
-        {contactLinks.map((item) => (
-          <a
-            href={item.href}
-            target={item.external ? "_blank" : undefined}
-            rel={item.external ? "noopener noreferrer" : undefined}
-            class={linkClass}
-          >
-            <svg
-              class="w-4 h-4 shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d={icons[item.icon]} />
-            </svg>
-            {item.label}
-            {item.external && <span aria-hidden="true" class="text-xs">↗</span>}
-          </a>
-        ))}
+      <!-- 站内导航 -->
+      <nav class="md:col-span-3" aria-labelledby="footer-nav-title">
+        <h2 id="footer-nav-title" class="meta-label">站内</h2>
+        <ul class="mt-2 space-y-0.5">
+          {siteLinks.map((link) => (
+            <li>
+              <a href={link.href} class={linkClass}>{link.label}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <!-- 外部链接：GitHub / Gitee / QQ 邮箱 -->
+      <div class="md:col-span-4">
+        <h2 class="meta-label">外部链接</h2>
+        <ul class="mt-2 space-y-0.5">
+          {externalLinks.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                target={link.href.startsWith("http") ? "_blank" : undefined}
+                rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                class={linkClass}
+              >
+                <svg
+                  class="h-4 w-4 shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d={icons[link.icon]} />
+                </svg>
+                <span class="break-all">{link.label}</span>
+                {link.href.startsWith("http") && (
+                  <>
+                    <svg class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M7 17 17 7"></path>
+                      <path d="M7 7h10v10"></path>
+                    </svg>
+                    <span class="sr-only">（在新标签页打开）</span>
+                  </>
+                )}
+              </a>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
 
-    <!-- 底行：固定版权与技术说明 -->
-    <div class="mt-3 border-t border-border pt-3 text-xs text-text-secondary text-center">
-      © 2026 PLV Studio · 基于 Astro 与 Tailwind CSS 构建 · 通过 Netlify 部署
+    <!-- 底行：版权与技术说明 -->
+    <div class="flex flex-col gap-2 border-t border-border py-5 text-xs text-text-secondary sm:flex-row sm:items-center sm:justify-between">
+      <p>© 2026 PLV Studio · 保留所有权利</p>
+      <p>基于 Astro 与 Tailwind CSS 构建 · 通过 Netlify 部署</p>
     </div>
   </div>
 </footer>

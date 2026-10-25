@@ -2,6 +2,7 @@
 import type { CollectionEntry } from "astro:content";
 import WorkStatusBadge from "./WorkStatusBadge.astro";
 import TechStackTags from "./TechStackTags.astro";
+import { publicStatusLabel, workTypeLabel } from "../lib/works";
 
 interface Props {
   /** works 集合条目映射为 { slug, ...frontmatter } 后的形状 */
@@ -13,14 +14,14 @@ interface Props {
 const { work, variant = "default", layout = "vertical" } = Astro.props;
 const isFeatured = variant === "featured";
 const isHorizontal = layout === "horizontal";
-// 页脚日期采用样品的点分格式：2026-10-23 -> 2026.10.23
-const updatedAtText = work.updatedAt.replaceAll("-", ".");
+const detailHref = `/works/${work.slug}/`;
+const statusText = publicStatusLabel(work.status, work.demoUrl);
 ---
 
 <article
   class:list={[
-    "work-card group bg-surface rounded-xl border border-border overflow-hidden transition",
-    "hover:border-primary/40 hover:shadow-md",
+    "work-card group overflow-hidden rounded-xl border border-border bg-surface transition-colors",
+    "hover:border-primary/40",
     isFeatured && "md:col-span-2 md:grid md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] md:items-stretch",
     isHorizontal && "sm:grid sm:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] sm:items-center",
   ]}
@@ -29,63 +30,75 @@ const updatedAtText = work.updatedAt.replaceAll("-", ".");
   <div class:list={["p-2.5", (isFeatured || isHorizontal) && "sm:h-full"]}>
     <div class:list={["relative", (isFeatured || isHorizontal) && "sm:h-full"]}>
       {work.cover ? (
-        <img
-          src={work.cover}
-          alt={work.title + " 封面"}
-          class:list={[
-            "w-full aspect-video object-cover rounded-lg transition-opacity duration-200 group-hover:opacity-90",
-            isFeatured && "md:h-full",
-          ]}
-          loading="lazy"
-        />
-      ) : (
-        <div
-          class="w-full aspect-video rounded-lg bg-surface-muted flex items-center justify-center text-sm text-text-secondary"
+        <a
+          href={detailHref}
+          class="block overflow-hidden rounded-lg focus-visible:outline-offset-4"
+          aria-label={`查看 ${work.title} 项目详情`}
         >
-          无封面
+          <img
+            src={work.cover}
+            alt={`${work.title} 运行截图`}
+            class:list={[
+              "aspect-video w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.01] motion-reduce:transform-none",
+              isFeatured && "md:h-full",
+            ]}
+            loading="lazy"
+            decoding="async"
+          />
+        </a>
+      ) : (
+        <div class="flex aspect-video w-full items-center justify-center rounded-lg bg-surface-muted text-sm text-text-secondary">
+          暂无项目截图
         </div>
       )}
-      <!-- 状态徽标叠在截图右上角 -->
-      <div class="absolute top-2.5 right-2.5">
-        <WorkStatusBadge status={work.status} variant="overlay" />
+      <div class="pointer-events-none absolute right-2.5 top-2.5">
+        <WorkStatusBadge status={work.status} variant="overlay" label={statusText} />
       </div>
     </div>
   </div>
 
-  <!-- 内容区：图标+标题 → 描述 → 技术标签 → 页脚（日期 + 详情入口） -->
+  <!-- 内容区：类型/标题 → 描述 → 技术标签 → 页脚（日期 + 详情入口） -->
   <div
     class:list={[
-      "px-5 pb-5 pt-1 flex flex-col flex-1",
-      isFeatured && "md:p-6 md:justify-center",
-      isHorizontal && "sm:p-6 sm:justify-center",
+      "flex flex-1 flex-col px-5 pb-5 pt-2",
+      isFeatured && "md:justify-center md:p-6",
+      isHorizontal && "sm:justify-center sm:p-6",
     ]}
   >
-    <div class="flex items-center gap-2.5 mb-2">
+    <div class="flex items-center gap-2.5">
       {work.icon ? (
         <img
           src={work.icon}
           alt=""
-          class="w-8 h-8 rounded-lg object-cover shrink-0"
+          class="h-8 w-8 shrink-0 rounded-lg object-cover"
           width="32"
           height="32"
         />
       ) : (
-        <span
-          class="w-8 h-8 rounded-lg bg-surface-muted text-text-secondary flex items-center justify-center text-sm font-semibold shrink-0"
-        >
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-sm font-semibold text-text-secondary">
           {work.title.slice(0, 1)}
         </span>
       )}
-      <h3 class="text-lg font-semibold text-text-primary">{work.title}</h3>
+      <div class="min-w-0">
+        <p class="text-xs text-text-muted">{workTypeLabel(work.type)}</p>
+        <h2 class="truncate text-lg font-semibold text-text-primary">
+          <a href={detailHref} class="underline-offset-4 hover:underline">{work.title}</a>
+        </h2>
+      </div>
     </div>
-    <p class="text-sm text-text-secondary line-clamp-2 mb-4 flex-1">{work.summary}</p>
-    <div class="mb-4">
-      <TechStackTags tags={work.techStack.slice(0, 3)} />
+
+    <p class="mt-3 line-clamp-2 flex-1 text-sm leading-relaxed text-text-secondary sm:line-clamp-3">
+      {work.summary}
+    </p>
+
+    <div class="mt-4">
+      <TechStackTags tags={work.techStack.slice(0, 4)} />
     </div>
-    <div class="flex items-center justify-between text-xs text-text-secondary">
+
+    <div class="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border/70 pt-3 text-xs text-text-secondary">
       <span class="inline-flex items-center gap-1.5">
         <svg
-          class="w-3.5 h-3.5"
+          class="h-3.5 w-3.5"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -97,12 +110,9 @@ const updatedAtText = work.updatedAt.replaceAll("-", ".");
           <circle cx="12" cy="12" r="10"></circle>
           <polyline points="12 6 12 12 16 14"></polyline>
         </svg>
-        最近更新 {updatedAtText}
+        最近更新 <time datetime={work.updatedAt}>{work.updatedAt}</time>
       </span>
-      <a
-        href={`/works/${work.slug}/`}
-        class="text-primary hover:underline font-medium"
-      >
+      <a href={detailHref} class="font-medium text-primary underline-offset-4 hover:underline dark:text-accent">
         查看详情 →
       </a>
     </div>

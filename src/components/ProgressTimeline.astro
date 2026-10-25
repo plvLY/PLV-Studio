@@ -1,68 +1,97 @@
 ---
 import type { ProgressEntry } from "../types";
+import WorkStatusBadge from "./WorkStatusBadge.astro";
 
 interface Props {
   entries: ProgressEntry[];
+  /** 章节标题（默认「开发进度」） */
+  title?: string;
+  /** 章节锚点，供首页/项目页从外部定位 */
+  id?: string;
+  description?: string;
+  /** 章节序号（可选，由项目详情页统一编号） */
+  index?: string;
 }
-const { entries = [] } = Astro.props;
 
-// 与 src/types.ts 的 ProgressStatus 对齐，并对未知状态做兜底（此前 planned 状态会渲染出空白徽标）
-const statusLabel: Record<string, string> = {
-  completed: "已完成",
-  "in-progress": "进行中",
-  "trial-run": "试运行",
-  planned: "规划中",
-  archived: "已归档",
-  blocked: "阻塞",
-};
-
-const statusColor: Record<string, string> = {
-  completed: "text-success",
-  "in-progress": "text-primary",
-  "trial-run": "text-accent",
-  planned: "text-warning",
-  archived: "text-text-secondary",
-  blocked: "text-warning",
-};
+const {
+  entries = [],
+  title = "开发进度",
+  id = "progress",
+  description = "按实际更新时间记录每个阶段的完成事项、当前问题与下一步。",
+  index,
+} = Astro.props;
+const titleId = `${id}-title`;
 ---
 
-<section class="progress-timeline">
-  <h2 class="text-lg font-semibold text-text-primary mb-6">开发进度</h2>
-  <div class="space-y-6">
-    {entries.map((entry) => (
-      <div class="group relative pl-8">
-        <div class="absolute left-0 top-2 w-2 h-2 rounded-full bg-border group-hover:bg-primary transition-colors"></div>
-        <div class="absolute left-0 top-3 w-px h-full bg-border hidden md:block"></div>
-        <div class="flex items-center gap-3 mb-2">
-          <h4 class="font-semibold text-text-primary">{entry.stage}</h4>
-          <span class={`px-2 py-0.5 rounded text-xs font-medium border ${statusColor[entry.status] ?? "text-text-secondary"} border-current`}>
-            {statusLabel[entry.status] ?? "未知"}
-          </span>
-          <span class="ml-auto text-xs text-text-secondary">{entry.updatedAt}</span>
-        </div>
-        {entry.completedItems.length > 0 && (
-          <ul class="text-sm text-text-secondary space-y-1 pl-2">
-            {entry.completedItems.map((item) => (
-              <li class="flex items-center gap-2">
-                <span class="text-success text-xs">✓</span>
-                {item}
-              </li>
-            ))}
-          </ul>
-        )}
-        {entry.currentIssues.length > 0 && (
-          <div class="mt-2 text-sm text-warning">
-            <span class="font-semibold">当前问题：</span>
-            {entry.currentIssues.join("；")}
-          </div>
-        )}
-        {entry.nextSteps.length > 0 && (
-          <div class="mt-2 text-sm text-text-secondary">
-            <span class="font-semibold">下一步：</span>
-            {entry.nextSteps.join("；")}
-          </div>
-        )}
+<section id={id} aria-labelledby={titleId} class="scroll-mt-24">
+  <div class="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
+    <div>
+      <div class="flex items-baseline gap-3">
+        {index && <span class="text-xs font-semibold tabular-nums text-text-muted" aria-hidden="true">{index}</span>}
+        <h2 id={titleId} class="text-xl font-bold text-text-primary">{title}</h2>
       </div>
-    ))}
+      <p class="mt-1 text-sm text-text-secondary">{description}</p>
+    </div>
+    <p class="text-xs text-text-muted">{entries.length} 条记录</p>
   </div>
+
+  {entries.length > 0 ? (
+    <ol class="mt-6 space-y-7 border-l border-border pl-0">
+      {entries.map((entry) => (
+        <li class="relative pl-6 sm:pl-7">
+          <span
+            class="absolute -left-[4.5px] top-2.5 h-2 w-2 rounded-full border border-surface bg-primary ring-4 ring-surface"
+            aria-hidden="true"
+          ></span>
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <h3 class="font-semibold text-text-primary">{entry.stage}</h3>
+            <WorkStatusBadge status={entry.status} />
+            <time datetime={entry.updatedAt} class="text-xs tabular-nums text-text-muted sm:ml-auto">
+              {entry.updatedAt}
+            </time>
+          </div>
+
+          {entry.completedItems.length > 0 && (
+            <ul class="mt-3 space-y-2 text-sm text-text-secondary">
+              {entry.completedItems.map((item) => (
+                <li class="flex items-start gap-2">
+                  <svg
+                    class="mt-1 h-3.5 w-3.5 shrink-0 text-success"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="m5 12 4 4L19 6"></path>
+                  </svg>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {entry.currentIssues.length > 0 && (
+            <p class="mt-3 text-sm text-warning">
+              <span class="font-semibold">当前问题：</span>
+              {entry.currentIssues.join("；")}
+            </p>
+          )}
+
+          {entry.nextSteps.length > 0 && (
+            <p class="mt-2 text-sm text-text-secondary">
+              <span class="font-semibold text-text-primary">下一步：</span>
+              {entry.nextSteps.join("；")}
+            </p>
+          )}
+        </li>
+      ))}
+    </ol>
+  ) : (
+    <p class="mt-6 rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-text-secondary">
+      暂无开发进度记录
+    </p>
+  )}
 </section>

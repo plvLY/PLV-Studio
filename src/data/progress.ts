@@ -40,5 +40,20 @@ export const progress: Record<string, ProgressEntry[]> = {
       currentIssues: [],
       nextSteps: [],
     },
+    {
+      stage: "体验与内容优化",
+      status: "completed",
+      updatedAt: "2026-10-25",
+      completedItems: [
+        "重构首页信息层级：精选作品、能力证据与最近开发记录",
+        "校准作品状态与进度口径，移除容易误解的阶段完成数统计",
+        "补充能力证据，并核验 GitHub / Gitee / 邮箱等公开链接",
+        "重做项目详情与文档阅读页，加入桌面/移动端目录与文档翻页",
+        "补齐 sitemap.xml、robots.txt 与页面级 SEO 元信息",
+        "完成 360–1600px 响应式、键盘、axe 可访问性与构建检查",
+      ],
+      currentIssues: [],
+      nextSteps: ["持续补充项目文档与内容"],
+    },
   ],
 };
