@@ -55,4 +55,4 @@ videoUrl: ""
 
 **作品详情页**
 
-![作品详情页运行截图](/images/works/plv-studio/detail.png)
+![作品详情页运行截图](/images/works/plv-studio/detail.svg)

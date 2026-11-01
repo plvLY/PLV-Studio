@@ -255,10 +255,26 @@ const description = `${work.title}：${work.summary}`;
 
           <div class="muted-card mt-5 p-5">
             <h3 class="text-sm font-semibold text-text-primary">维护与复盘</h3>
-            <p class="mt-2 text-sm leading-relaxed text-text-secondary">
-              站点已进入正式运行，后续以内容维护与小幅迭代为主。复盘文档尚未单独发布；
-              当前结论以设计文档与开发记录为准，不补写未发生的验收结果。
-            </p>
+            {slug === "plv-studio" ? (
+              <p class="mt-2 text-sm leading-relaxed text-text-secondary">
+                站点已进入正式运行，后续以内容维护与小幅迭代为主。复盘文档尚未单独发布；
+                当前结论以设计文档与开发记录为准，不补写未发生的验收结果。
+              </p>
+            ) : slug === "codeatomy" ? (
+              <p class="mt-2 text-sm leading-relaxed text-text-secondary">
+                项目处于早期开发阶段，E0 工程骨架已完成。当前重点：
+                <ul class="mt-2 space-y-1 text-xs">
+                  <li>• 开始 M0 Walking Skeleton：实现基础扫描功能</li>
+                  <li>• 验证 CLI 工具：确保 `java -jar codeatomy-cli.jar` 正常工作</li>
+                  <li>• 搭建测试环境：用 6 个 fixture 项目验证扫描能力</li>
+                </ul>
+                复盘将在 M0 阶段完成后进行，重点关注算法准确性和性能指标。
+              </p>
+            ) : (
+              <p class="mt-2 text-sm leading-relaxed text-text-secondary">
+                项目开发中，维护与复盘信息将在关键里程碑完成后更新。
+              </p>
+            )}
           </div>
         </section>
 
