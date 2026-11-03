@@ -9,10 +9,20 @@ export const GET: APIRoute = async ({ site }) => {
   const works = await getCollection("works", ({ data }) => data.published);
   const documents = await getCollection("documents");
 
+  // 首页/列表/关于的 lastmod 取作品元数据与真实进度记录中的最新日期
+  const latestWorkUpdate =
+    works
+      .flatMap((work) => [
+        work.data.updatedAt,
+        ...(progress[work.id] ?? []).map((item) => item.updatedAt),
+      ])
+      .sort()
+      .at(-1) ?? undefined;
+
   const urls: Array<{ path: string; lastmod?: string; changefreq?: string; priority?: string }> = [
-    { path: "/", lastmod: works.map((work) => work.data.updatedAt).sort().at(-1), changefreq: "weekly", priority: "1.0" },
-    { path: "/works/", lastmod: works.map((work) => work.data.updatedAt).sort().at(-1), changefreq: "weekly", priority: "0.9" },
-    { path: "/about/", lastmod: works.map((work) => work.data.updatedAt).sort().at(-1), changefreq: "monthly", priority: "0.6" },
+    { path: "/", lastmod: latestWorkUpdate, changefreq: "weekly", priority: "1.0" },
+    { path: "/works/", lastmod: latestWorkUpdate, changefreq: "weekly", priority: "0.9" },
+    { path: "/about/", lastmod: latestWorkUpdate, changefreq: "monthly", priority: "0.6" },
   ];
 
   for (const work of works) {
@@ -30,6 +40,10 @@ export const GET: APIRoute = async ({ site }) => {
     const workDocs = documents
       .filter((doc) => doc.id.startsWith(`${work.id}/`))
       .map((doc) => ({ docId: doc.id.split("/")[1], updatedAt: doc.data.updatedAt }));
+
+    // 没有公开文档的作品不生成文档列表路由，也不写进 sitemap
+    if (workDocs.length === 0) continue;
+
     urls.push({
       path: `/works/${work.id}/documents/`,
       lastmod: workDocs.map((doc) => doc.updatedAt).sort().at(-1) ?? work.data.updatedAt,

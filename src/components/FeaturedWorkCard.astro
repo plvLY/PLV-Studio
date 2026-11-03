@@ -1,7 +1,7 @@
 ---
 import type { CollectionEntry } from "astro:content";
 import TechStackTags from "./TechStackTags.astro";
-import { publicStatusLabel, workTypeLabel } from "../lib/works";
+import { coverAlt, coverCaption, publicStatusLabel, workTypeLabel } from "../lib/works";
 
 interface Props {
   /** works 集合条目映射为 { slug, ...frontmatter } 后的形状 */
@@ -28,7 +28,7 @@ const statusText = publicStatusLabel(work.status, work.demoUrl);
         {work.cover ? (
           <img
             src={work.cover}
-            alt={`${work.title} 首页运行截图`}
+            alt={coverAlt(work.title, work.coverKind)}
             width="1440"
             height="810"
             class="aspect-video w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.015] motion-reduce:transform-none"
@@ -42,7 +42,7 @@ const statusText = publicStatusLabel(work.status, work.demoUrl);
         )}
       </a>
       <figcaption class="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-text-muted">
-        <span>真实运行截图 · 首页</span>
+        <span>{coverCaption(work.coverKind)}</span>
         <span class="tabular-nums">01 / 精选作品</span>
       </figcaption>
     </figure>
@@ -50,13 +50,13 @@ const statusText = publicStatusLabel(work.status, work.demoUrl);
     <div class="flex flex-col p-6 sm:p-8 lg:p-10">
       <div class="flex flex-wrap items-center gap-2.5">
         <span class="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface-muted px-2.5 py-1 text-xs font-medium text-text-secondary">
-          <span class="h-1.5 w-1.5 rounded-full bg-success" aria-hidden="true"></span>
+          <span class:list={["h-1.5 w-1.5 rounded-full", statusText === "已上线" ? "bg-success" : "bg-warning"]} aria-hidden="true"></span>
           {statusText}
         </span>
         <span class="rounded-full border border-border px-2.5 py-1 text-xs text-text-secondary">
           {workTypeLabel(work.type)}
         </span>
-        <span class="text-xs text-text-muted">本站自身</span>
+        {work.slug === "plv-studio" && <span class="text-xs text-text-muted">本站自身</span>}
       </div>
 
       <h3 class="mt-4 text-2xl font-bold tracking-tight text-text-primary sm:text-3xl">
@@ -73,11 +73,13 @@ const statusText = publicStatusLabel(work.status, work.demoUrl);
           查看项目
           <span aria-hidden="true">→</span>
         </a>
-        <a href={documentsHref} class="btn btn-secondary">
-          设计文档
-          <span class="text-text-muted" aria-hidden="true">{docCount}</span>
-          <span class="sr-only">（共 {docCount} 份）</span>
-        </a>
+        {docCount > 0 && (
+          <a href={documentsHref} class="btn btn-secondary">
+            设计文档
+            <span class="text-text-muted" aria-hidden="true">{docCount}</span>
+            <span class="sr-only">（共 {docCount} 份）</span>
+          </a>
+        )}
         <a href={`${detailHref}#progress`} class="text-link">开发记录</a>
       </div>
     </div>

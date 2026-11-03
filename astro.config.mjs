@@ -1,6 +1,8 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
+import { satteri } from '@astrojs/markdown-satteri';
+import { mermaidPlugin } from './src/lib/markdown-mermaid.ts';
 
 // Astro dev/preview 对缺少尾斜杠的任意路径会直接返回原生 404，不读取自定义 404.html。
 // 本地服务放宽为 ignore，保证预览时也能看到站内 404；生产构建仍为 always，
@@ -17,6 +19,10 @@ export default defineConfig({
     port: 4321, 
     host: true,
     allowedHosts: true, 
+  },
+  // 文档里的 ```mermaid 代码块在构建期渲染为静态图（不引入客户端 Mermaid 运行时）
+  markdown: {
+    processor: satteri({ mdastPlugins: [mermaidPlugin] }),
   },
   // Tailwind v4 通过 Vite 插件接入（@astrojs/tailwind 已停止维护，不支持 Astro 7）
   vite: {

@@ -10,11 +10,18 @@ interface Props {
 }
 
 export async function getStaticPaths() {
-  const entries = await getCollection("documents");
-  return entries.map((entry) => {
-    const [workSlug, docId] = entry.id.split("/");
-    return { params: { slug: workSlug, doc: docId }, props: { entry } };
-  });
+  const [entries, works] = await Promise.all([
+    getCollection("documents"),
+    getCollection("works", ({ data }) => data.published),
+  ]);
+  // 只为已发布作品生成文档路由，避免草稿文档绕过发布门禁
+  const publishedSlugs = new Set(works.map((work) => work.id));
+  return entries
+    .filter((entry) => publishedSlugs.has(entry.id.split("/")[0]!))
+    .map((entry) => {
+      const [workSlug, docId] = entry.id.split("/");
+      return { params: { slug: workSlug, doc: docId }, props: { entry } };
+    });
 }
 
 const { entry } = Astro.props;
@@ -137,7 +144,7 @@ const description = `${docEntry.summary}（${work?.title ?? "PLV Studio"} 设计
           </div>
           <div class="mt-4 flex flex-wrap items-center gap-4">
             <a href={documentsHref} class="text-link">全部设计文档</a>
-            <a href={`${workHref}#progress`} class="text-link">查看开发进度</a>
+            <a href={`${workHref}#progress`} class="text-link">查看开发与发布记录</a>
           </div>
         </nav>
       </article>

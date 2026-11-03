@@ -1,97 +1,103 @@
 ---
 import type { ProgressEntry } from "../types";
-import WorkStatusBadge from "./WorkStatusBadge.astro";
+import ChangeList from "./ChangeList.astro";
+import ReleaseBadge from "./ReleaseBadge.astro";
+import { entryChanges, releaseState } from "../lib/progress";
 
 interface Props {
   entries: ProgressEntry[];
-  /** 章节标题（默认「开发进度」） */
+  /** 章节标题（默认「开发与发布记录」） */
   title?: string;
   /** 章节锚点，供首页/项目页从外部定位 */
   id?: string;
   description?: string;
   /** 章节序号（可选，由项目详情页统一编号） */
   index?: string;
+  eyebrow?: string;
 }
 
 const {
   entries = [],
-  title = "开发进度",
+  title = "开发与发布记录",
   id = "progress",
-  description = "按实际更新时间记录每个阶段的完成事项、当前问题与下一步。",
+  description = "按实际更新时间记录每个阶段的变更、当前问题与下一步；状态按真实进度标注为 Released / In Progress / Planned。",
   index,
+  eyebrow = "Release Notes",
 } = Astro.props;
 const titleId = `${id}-title`;
+const releasedCount = entries.filter((entry) => entry.status === "completed").length;
+
+// 发布日志的左侧色条：颜色只是辅助，右侧始终有 [Released] 等文字标签
+const barClass: Record<string, string> = {
+  released: "border-l-success",
+  trial: "border-l-cyan-500",
+  progress: "border-l-warning",
+  planned: "border-l-border",
+  blocked: "border-l-red-500",
+  archived: "border-l-border",
+};
 ---
 
 <section id={id} aria-labelledby={titleId} class="scroll-mt-24">
   <div class="flex flex-wrap items-end justify-between gap-3 border-b border-border pb-3">
-    <div>
-      <div class="flex items-baseline gap-3">
+    <div class="min-w-0">
+      <p class="eyebrow">{eyebrow}</p>
+      <div class="mt-1.5 flex items-baseline gap-3">
         {index && <span class="text-xs font-semibold tabular-nums text-text-muted" aria-hidden="true">{index}</span>}
         <h2 id={titleId} class="text-xl font-bold text-text-primary">{title}</h2>
       </div>
       <p class="mt-1 text-sm text-text-secondary">{description}</p>
     </div>
-    <p class="text-xs text-text-muted">{entries.length} 条记录</p>
+    <p class="text-xs text-text-muted">{entries.length} 个阶段 · {releasedCount} 个已发布</p>
   </div>
 
   {entries.length > 0 ? (
-    <ol class="mt-6 space-y-7 border-l border-border pl-0">
-      {entries.map((entry) => (
-        <li class="relative pl-6 sm:pl-7">
-          <span
-            class="absolute -left-[4.5px] top-2.5 h-2 w-2 rounded-full border border-surface bg-primary ring-4 ring-surface"
-            aria-hidden="true"
-          ></span>
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <h3 class="font-semibold text-text-primary">{entry.stage}</h3>
-            <WorkStatusBadge status={entry.status} />
-            <time datetime={entry.updatedAt} class="text-xs tabular-nums text-text-muted sm:ml-auto">
-              {entry.updatedAt}
-            </time>
-          </div>
+    <ol class="mt-6 space-y-4">
+      {entries.map((entry, entryIndex) => {
+        const state = releaseState(entry.status);
+        return (
+          <li
+            class:list={[
+              "rounded-xl border border-l-2 border-border bg-surface p-5 sm:p-6",
+              barClass[state.tone],
+              entry.status === "planned" && "border-dashed bg-surface-muted/30",
+            ]}
+          >
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <span class="font-mono text-[11px] text-text-muted" aria-hidden="true">
+                {String(entryIndex + 1).padStart(2, "0")}
+              </span>
+              <h3 class="text-base font-semibold text-text-primary">{entry.stage}</h3>
+              <ReleaseBadge status={entry.status} />
+              <time datetime={entry.updatedAt} class="ml-auto text-xs tabular-nums text-text-muted">
+                {entry.updatedAt}
+              </time>
+            </div>
 
-          {entry.completedItems.length > 0 && (
-            <ul class="mt-3 space-y-2 text-sm text-text-secondary">
-              {entry.completedItems.map((item) => (
-                <li class="flex items-start gap-2">
-                  <svg
-                    class="mt-1 h-3.5 w-3.5 shrink-0 text-success"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="m5 12 4 4L19 6"></path>
-                  </svg>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+            <div class="mt-4">
+              <ChangeList changes={entryChanges(entry)} />
+            </div>
 
-          {entry.currentIssues.length > 0 && (
-            <p class="mt-3 text-sm text-warning">
-              <span class="font-semibold">当前问题：</span>
-              {entry.currentIssues.join("；")}
-            </p>
-          )}
+            {entry.currentIssues.length > 0 && (
+              <p class="mt-3 rounded-lg border border-warning/25 bg-warning/5 px-3 py-2 text-sm text-warning">
+                <span class="font-semibold">当前问题：</span>
+                {entry.currentIssues.join("；")}
+              </p>
+            )}
 
-          {entry.nextSteps.length > 0 && (
-            <p class="mt-2 text-sm text-text-secondary">
-              <span class="font-semibold text-text-primary">下一步：</span>
-              {entry.nextSteps.join("；")}
-            </p>
-          )}
-        </li>
-      ))}
+            {entry.nextSteps.length > 0 && (
+              <p class="mt-3 text-sm leading-relaxed text-text-secondary">
+                <span class="font-semibold text-text-primary">下一步：</span>
+                {entry.nextSteps.join("；")}
+              </p>
+            )}
+          </li>
+        );
+      })}
     </ol>
   ) : (
     <p class="mt-6 rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-text-secondary">
-      暂无开发进度记录
+      暂无开发与发布记录
     </p>
   )}
 </section>

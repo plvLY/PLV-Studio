@@ -1,0 +1,32 @@
+---
+import type { CollectionEntry } from "astro:content";
+import WorkCard from "./WorkCard.astro";
+
+interface Props {
+  works: Array<{ slug: string } & CollectionEntry<"works">["data"]>;
+  label?: string;
+}
+
+const { works, label = "更多精选作品" } = Astro.props;
+---
+
+{works.length > 0 && (
+  <div class="mt-4">
+    <!-- 移动端：横向滑动；桌面端：两列网格。滑动容器可键盘聚焦，避免只能靠触摸 -->
+    <div
+      class="scroll-track -mx-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:overflow-visible sm:px-0 sm:pb-0"
+      tabindex="0"
+      role="region"
+      aria-label={label}
+    >
+      <ul class="flex snap-x snap-mandatory gap-4 sm:grid sm:grid-cols-2 sm:gap-5">
+        {works.map((work) => (
+          <li class="w-[86%] shrink-0 snap-start sm:w-auto">
+            <WorkCard work={work} />
+          </li>
+        ))}
+      </ul>
+    </div>
+    <p class="mt-2 text-xs text-text-muted sm:hidden">左右滑动查看更多作品</p>
+  </div>
+)}

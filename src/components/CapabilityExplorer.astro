@@ -1,0 +1,267 @@
+---
+import type { SkillDirection, SkillMaturity } from "../types";
+import TechStackTags from "./TechStackTags.astro";
+
+interface Props {
+  skills: SkillDirection[];
+  /** 供同一页面多处使用时区分 id（默认 capabilities） */
+  id?: string;
+}
+
+const { skills, id = "capabilities" } = Astro.props;
+
+// 成熟度必须同时用文字与颜色表达，不能只靠颜色。
+const maturityMap: Record<SkillMaturity, { label: string; dot: string; text: string; bg: string; border: string }> = {
+  practiced: {
+    label: "已实践",
+    dot: "bg-success",
+    text: "text-success",
+    bg: "bg-success/5",
+    border: "border-success/25",
+  },
+  exploring: {
+    label: "探索中",
+    dot: "bg-warning",
+    text: "text-warning",
+    bg: "bg-warning/5",
+    border: "border-warning/25",
+  },
+  professional: {
+    label: "专业方向",
+    dot: "bg-primary dark:bg-accent",
+    text: "text-primary dark:text-accent",
+    bg: "bg-primary/5 dark:bg-accent/10",
+    border: "border-primary/20 dark:border-accent/25",
+  },
+};
+---
+
+<div class="mt-7" data-capabilities data-capabilities-id={id}>
+  <!-- 标签页：无 JS 时就是一组锚点链接 + 完整展开的面板；ARIA 由脚本补齐 -->
+  <div
+    class="scroll-track -mx-1 flex snap-x gap-1.5 overflow-x-auto rounded-xl border border-border bg-surface-muted/60 p-1.5 sm:mx-0"
+    data-cap-tabs
+    aria-label="能力方向"
+  >
+    {skills.map((skill, index) => {
+      const maturity = maturityMap[skill.maturity];
+      return (
+        <a
+          href={`#${id}-panel-${index}`}
+          id={`${id}-tab-${index}`}
+          class="cap-tab flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-lg px-3.5 text-sm font-medium transition-colors"
+          data-cap-tab={index}
+        >
+          <span class:list={["h-1.5 w-1.5 shrink-0 rounded-full", maturity.dot]} aria-hidden="true"></span>
+          <span class="whitespace-nowrap">{skill.name}</span>
+          {skill.note && (
+            <span class="hidden whitespace-nowrap text-[11px] text-text-muted sm:inline">{skill.note}</span>
+          )}
+        </a>
+      );
+    })}
+  </div>
+
+  {skills.map((skill, index) => {
+    const maturity = maturityMap[skill.maturity];
+    return (
+      <section
+        id={`${id}-panel-${index}`}
+        data-cap-panel={index}
+        class="cap-panel mt-4 rounded-2xl border border-border bg-surface p-5 shadow-xs sm:p-7"
+      >
+        <div class="flex flex-wrap items-start gap-x-3 gap-y-2">
+          <h3 class="text-xl font-bold tracking-tight text-text-primary sm:text-2xl">{skill.name}</h3>
+          <span
+            class:list={[
+              "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+              maturity.text,
+              maturity.bg,
+              maturity.border,
+            ]}
+          >
+            <span class:list={["h-1.5 w-1.5 rounded-full", maturity.dot]} aria-hidden="true"></span>
+            {maturity.label}
+          </span>
+          {skill.note && (
+            <span class="inline-flex shrink-0 items-center rounded-full border border-border px-2.5 py-1 text-xs text-text-muted">
+              {skill.note}
+            </span>
+          )}
+        </div>
+
+        <p class="mt-3 max-w-3xl text-sm leading-relaxed text-text-secondary sm:text-base">{skill.summary}</p>
+        <div class="mt-3.5">
+          <TechStackTags tags={skill.items} />
+        </div>
+
+        <div class="mt-6 grid gap-6 border-t border-border/70 pt-6 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-10">
+          <!-- 站内深度：先给实现脉络，再给外部出口 -->
+          <div class="min-w-0">
+            <p class="meta-label">站内实现脉络</p>
+            {skill.milestones && skill.milestones.length > 0 ? (
+              <ol class="relative mt-4 space-y-4 border-l border-border pl-5">
+                {skill.milestones.map((milestone) => (
+                  <li class="relative">
+                    <span class="absolute -left-[26px] top-1.5 flex h-3 w-3 items-center justify-center rounded-full border border-primary/30 bg-surface" aria-hidden="true">
+                      <span class="h-1.5 w-1.5 rounded-full bg-primary dark:bg-accent"></span>
+                    </span>
+                    <p class="text-sm font-semibold text-text-primary">{milestone.title}</p>
+                    <p class="mt-1 text-sm leading-relaxed text-text-secondary">{milestone.detail}</p>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p class="mt-3 text-sm text-text-muted">该方向暂未整理实现脉络，可先查看右侧证据入口。</p>
+            )}
+          </div>
+
+          <div class="min-w-0">
+            <div class="flex items-baseline justify-between gap-3">
+              <p class="meta-label">证据入口</p>
+              <a href="/works/" class="text-xs font-medium text-primary underline-offset-4 hover:underline dark:text-accent">
+                全部作品 →
+              </a>
+            </div>
+            <ul class="mt-3 space-y-1.5">
+              {skill.evidence.map((item) => (
+                <li>
+                  <a
+                    href={item.href}
+                    target={item.external ? "_blank" : undefined}
+                    rel={item.external ? "noopener noreferrer" : undefined}
+                    class="group -mx-2 flex min-h-10 items-start justify-between gap-3 rounded-lg border border-transparent px-2 py-2 transition-colors hover:border-border hover:bg-surface-muted/60"
+                  >
+                    <span class="min-w-0">
+                      <span class="block text-sm font-medium text-text-primary transition-colors group-hover:text-primary dark:group-hover:text-accent">
+                        {item.label}
+                      </span>
+                      {item.meta && <span class="mt-0.5 block text-xs text-text-muted">{item.meta}</span>}
+                    </span>
+                    <span class="mt-0.5 shrink-0 text-xs text-text-muted" aria-hidden="true">
+                      {item.external ? "↗" : "→"}
+                    </span>
+                    {item.external && <span class="sr-only">（在新标签页打开）</span>}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <p class="mt-3 text-xs leading-relaxed text-text-muted">
+              外部仓库仅作为能力证据展示，未收录为本站作品；「探索中」的方向不会标成已完成能力。
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  })}
+</div>
+
+<script>
+  // 渐进增强：无 JS 时面板全部可见（标签退化为锚点）；有 JS 时切换单一面板，
+  // 在移动端显著缩短页面长度。
+  function initCapabilityTabs() {
+    document.querySelectorAll<HTMLElement>("[data-capabilities]").forEach((root) => {
+      if (root.dataset.enhanced === "true") return;
+
+      const tabs = Array.from(root.querySelectorAll<HTMLAnchorElement>("[data-cap-tab]"));
+      const panels = Array.from(root.querySelectorAll<HTMLElement>("[data-cap-panel]"));
+      if (tabs.length === 0 || tabs.length !== panels.length) return;
+
+      // 脚本就绪后才把「锚点链接 + 面板」升级为 tabs，保证无 JS 语义不被破坏
+      root.querySelector<HTMLElement>("[data-cap-tabs]")?.setAttribute("role", "tablist");
+      tabs.forEach((tab, index) => {
+        tab.setAttribute("role", "tab");
+        tab.setAttribute("aria-controls", panels[index]!.id);
+      });
+      panels.forEach((panel, index) => {
+        panel.setAttribute("role", "tabpanel");
+        panel.setAttribute("aria-labelledby", tabs[index]!.id);
+      });
+
+      const activate = (index: number, moveFocus = false) => {
+        tabs.forEach((tab, i) => {
+          const selected = i === index;
+          tab.setAttribute("aria-selected", String(selected));
+          tab.tabIndex = selected ? 0 : -1;
+        });
+        panels.forEach((panel, i) => {
+          panel.hidden = i !== index;
+        });
+        if (moveFocus) tabs[index]?.focus();
+      };
+
+      let active = 0;
+      if (location.hash) {
+        const fromHash = tabs.findIndex((tab) => tab.getAttribute("href") === location.hash);
+        if (fromHash >= 0) active = fromHash;
+      }
+      activate(active);
+
+      tabs.forEach((tab, index) => {
+        tab.addEventListener("click", (event) => {
+          event.preventDefault();
+          activate(index);
+        });
+
+        tab.addEventListener("keydown", (event) => {
+          let next = -1;
+          if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (index + 1) % tabs.length;
+          else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = (index - 1 + tabs.length) % tabs.length;
+          else if (event.key === "Home") next = 0;
+          else if (event.key === "End") next = tabs.length - 1;
+          if (next < 0) return;
+          event.preventDefault();
+          activate(next, true);
+        });
+      });
+
+      root.dataset.enhanced = "true";
+    });
+  }
+
+  document.addEventListener("astro:page-load", initCapabilityTabs);
+</script>
+
+<style>
+  .cap-tab {
+    color: rgb(var(--c-text-secondary));
+  }
+
+  .cap-tab:hover {
+    color: rgb(var(--c-text-primary));
+    background-color: rgb(var(--c-surface-muted));
+  }
+
+  .cap-tab[aria-selected="true"] {
+    color: rgb(var(--c-text-primary));
+    background-color: rgb(var(--c-surface));
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
+    outline: 1px solid rgb(var(--c-border));
+    outline-offset: -1px;
+  }
+
+  .cap-panel[hidden] {
+    display: none;
+  }
+
+  .cap-panel {
+    animation: cap-panel-in 0.22s ease-out;
+  }
+
+  @keyframes cap-panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cap-panel {
+      animation: none;
+    }
+  }
+</style>

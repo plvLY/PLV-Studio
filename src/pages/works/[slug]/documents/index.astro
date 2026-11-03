@@ -9,8 +9,19 @@ import { publicStatusLabel } from "../../../../lib/works";
 
 export async function getStaticPaths() {
   // 父目录唯一 slug：entry.id 形如 plv-studio/requirements
-  const entries = await getCollection("documents");
-  const slugs = [...new Set(entries.map((e) => e.id.split("/")[0]))];
+  const [entries, works] = await Promise.all([
+    getCollection("documents"),
+    getCollection("works", ({ data }) => data.published),
+  ]);
+  // 只为已发布作品生成文档列表路由，避免草稿文档绕过发布门禁
+  const publishedSlugs = new Set(works.map((work) => work.id));
+  const slugs = [
+    ...new Set(
+      entries
+        .filter((entry) => publishedSlugs.has(entry.id.split("/")[0]!))
+        .map((entry) => entry.id.split("/")[0]!),
+    ),
+  ];
   return slugs.map((slug) => ({ params: { slug } }));
 }
 
@@ -108,7 +119,7 @@ const pageDescription = `${work.title}的公开设计文档：${workDocs.map((do
       <h2 id="docs-note-title" class="text-base font-semibold text-text-primary">文档说明</h2>
       <p class="mt-2 text-sm leading-relaxed text-text-secondary">
         当前公开文档覆盖：{docTypes.length > 0 ? docTypes.join("、") : "暂无"}。测试验收、发布记录与维护说明记录在作品的
-        <a href={`${workHref}#progress`} class="text-link">开发进度</a>
+        <a href={`${workHref}#progress`} class="text-link">开发与发布记录</a>
         与
         <a href={`${workHref}#release`} class="text-link">验收与上线</a>
         章节中；复盘文档尚未单独发布，不以空文档占位。

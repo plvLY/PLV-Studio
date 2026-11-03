@@ -1,21 +1,40 @@
 // 进度内容模型（参考需求文档 9.4 进度模型）
 // 状态枚举与 src/types.ts 保持一致：planned | in-progress | trial-run | completed | archived | blocked
+// changes 按发布日志的语义分类（feature / fix / perf / docs / chore），
+// 让「最近开发记录」与项目发布日志可以按类型分组阅读，而不是一长串等权事项。
 import type { ProgressEntry } from "../types";
 
 export const progress: Record<string, ProgressEntry[]> = {
   "plv-studio": [
-    { stage: "需求分析", status: "completed", updatedAt: "2026-10-01", completedItems: ["确定站点定位与内容模型"], currentIssues: [], nextSteps: ["进入技术架构"] },
-    { stage: "技术架构", status: "completed", updatedAt: "2026-10-01", completedItems: ["Astro + Tailwind 方案选型"], currentIssues: [], nextSteps: ["开发实现"] },
+    {
+      stage: "需求分析",
+      status: "completed",
+      updatedAt: "2026-10-01",
+      changes: [{ kind: "docs", text: "确定站点定位与内容模型" }],
+      currentIssues: [],
+      nextSteps: ["进入技术架构"],
+    },
+    {
+      stage: "技术架构",
+      status: "completed",
+      updatedAt: "2026-10-01",
+      changes: [{ kind: "chore", text: "Astro + Tailwind 方案选型" }],
+      currentIssues: [],
+      nextSteps: ["开发实现"],
+    },
     {
       stage: "开发实现",
       status: "completed",
       updatedAt: "2026-10-24",
-      completedItems: [
-        "首页、作品列表、作品详情与文档阅读页",
-        "设计令牌系统与暗色模式（首帧无闪烁切换）",
-        "Tailwind v4 迁移与 TypeScript 类型检查接入（astro check 零错误）",
-        "canonical/OG 元信息、404 页与基础无障碍支持（跳过链接、键盘导航、reduced-motion）",
-        "Cloudflare Web Analytics 站点统计接入",
+      changes: [
+        { kind: "feature", text: "首页、作品列表、作品详情与文档阅读页" },
+        { kind: "feature", text: "设计令牌系统与暗色模式（首帧无闪烁切换）" },
+        { kind: "perf", text: "Tailwind v4 迁移与 TypeScript 类型检查接入（astro check 零错误）" },
+        {
+          kind: "feature",
+          text: "canonical/OG 元信息、404 页与基础无障碍支持（跳过链接、键盘导航、reduced-motion）",
+        },
+        { kind: "chore", text: "Cloudflare Web Analytics 站点统计接入" },
       ],
       currentIssues: [],
       nextSteps: ["试运行与测试验收"],
@@ -24,10 +43,10 @@ export const progress: Record<string, ProgressEntry[]> = {
       stage: "测试验收",
       status: "completed",
       updatedAt: "2026-10-25",
-      completedItems: [
-        "站点部署上线并公开可访问",
-        "多尺寸响应式与无障碍验收",
-        "全部路由、外链与静态资源检查",
+      changes: [
+        { kind: "chore", text: "站点部署上线并公开可访问" },
+        { kind: "fix", text: "多尺寸响应式与无障碍验收" },
+        { kind: "fix", text: "全部路由、外链与静态资源检查" },
       ],
       currentIssues: [],
       nextSteps: [],
@@ -36,7 +55,10 @@ export const progress: Record<string, ProgressEntry[]> = {
       stage: "发布部署",
       status: "completed",
       updatedAt: "2026-10-25",
-      completedItems: ["Netlify 上线发布：https://plvstudio.netlify.app", "试运行结束，进入正式运行"],
+      changes: [
+        { kind: "chore", text: "Netlify 上线发布：https://plvstudio.netlify.app" },
+        { kind: "chore", text: "试运行结束，进入正式运行" },
+      ],
       currentIssues: [],
       nextSteps: [],
     },
@@ -44,16 +66,30 @@ export const progress: Record<string, ProgressEntry[]> = {
       stage: "体验与内容优化",
       status: "completed",
       updatedAt: "2026-10-25",
-      completedItems: [
-        "重构首页信息层级：精选作品、能力证据与最近开发记录",
-        "校准作品状态与进度口径，移除容易误解的阶段完成数统计",
-        "补充能力证据，并核验 GitHub / Gitee / 邮箱等公开链接",
-        "重做项目详情与文档阅读页，加入桌面/移动端目录与文档翻页",
-        "补齐 sitemap.xml、robots.txt 与页面级 SEO 元信息",
-        "完成 360–1600px 响应式、键盘、axe 可访问性与构建检查",
+      changes: [
+        { kind: "feature", text: "重构首页信息层级：精选作品、能力证据与最近开发记录" },
+        { kind: "fix", text: "校准作品状态与进度口径，移除容易误解的阶段完成数统计" },
+        { kind: "docs", text: "补充能力证据，并核验 GitHub / Gitee / 邮箱等公开链接" },
+        { kind: "feature", text: "重做项目详情与文档阅读页，加入桌面/移动端目录与文档翻页" },
+        { kind: "feature", text: "补齐 sitemap.xml、robots.txt 与页面级 SEO 元信息" },
+        { kind: "fix", text: "完成 360–1600px 响应式、键盘、axe 可访问性与构建检查" },
       ],
       currentIssues: [],
       nextSteps: ["持续补充项目文档与内容"],
+    },
+    {
+      stage: "视觉与信息架构升级",
+      status: "completed",
+      updatedAt: "2026-11-04",
+      changes: [
+        { kind: "feature", text: "首屏加入 Live Stats 数据胶囊与终端风格作品预览卡" },
+        { kind: "feature", text: "能力与证据改为标签页深度视图：先看站内实现脉络，再给出外部仓库出口" },
+        { kind: "feature", text: "新增访客分流、作品 STAR 叙事与发布日志式开发记录" },
+        { kind: "feature", text: "移动端精选作品横向滑动，能力面板单页切换，减少长页面滚动" },
+        { kind: "docs", text: "文档中的 Mermaid 架构图在构建期渲染为静态 SVG（零客户端依赖）" },
+      ],
+      currentIssues: [],
+      nextSteps: ["持续补充项目文档与数据指标"],
     },
   ],
   "codeatomy": [
@@ -61,13 +97,13 @@ export const progress: Record<string, ProgressEntry[]> = {
       stage: "E0 工程骨架",
       status: "completed",
       updatedAt: "2026-10-30",
-      completedItems: [
-        "父 POM 与 7 个核心模块架构搭建",
-        "完整的 Maven 依赖管理（Spoon 11.5.0、Spring Boot 3.4.0 等）",
-        "CLI 基础命令实现：--help、version",
-        "打包脚本与 CI 配置",
-        "新增 codeatomy-ui 模块（Spring Boot Web UI 后端）",
-        "6 个测试 fixture 项目搭建完成",
+      changes: [
+        { kind: "chore", text: "父 POM 与 7 个核心模块架构搭建" },
+        { kind: "chore", text: "完整的 Maven 依赖管理（Spoon 11.5.0、Spring Boot 3.4.0 等）" },
+        { kind: "feature", text: "CLI 基础命令实现：--help、version" },
+        { kind: "chore", text: "打包脚本与 CI 配置" },
+        { kind: "feature", text: "新增 codeatomy-ui 模块（Spring Boot Web UI 后端）" },
+        { kind: "chore", text: "6 个测试 fixture 项目搭建完成" },
       ],
       currentIssues: [],
       nextSteps: ["开始 M0 Walking Skeleton 开发"],
@@ -76,7 +112,7 @@ export const progress: Record<string, ProgressEntry[]> = {
       stage: "M0 Walking Skeleton",
       status: "planned",
       updatedAt: "2026-10-30",
-      completedItems: [],
+      changes: [],
       currentIssues: [],
       nextSteps: [
         "实现 simple-boot/multi-module 项目扫描",
@@ -90,7 +126,7 @@ export const progress: Record<string, ProgressEntry[]> = {
       stage: "M1 影响分析闭环",
       status: "planned",
       updatedAt: "2026-10-30",
-      completedItems: [],
+      changes: [],
       currentIssues: [],
       nextSteps: [
         "Bean/DI 图构建与依赖注入分析",
@@ -104,7 +140,7 @@ export const progress: Record<string, ProgressEntry[]> = {
       stage: "M2 框架语义与报告",
       status: "planned",
       updatedAt: "2026-10-30",
-      completedItems: [],
+      changes: [],
       currentIssues: [],
       nextSteps: [
         "AspectJ pointcut 解析",
@@ -118,7 +154,7 @@ export const progress: Record<string, ProgressEntry[]> = {
       stage: "M3 v0.1 RC",
       status: "planned",
       updatedAt: "2026-10-30",
-      completedItems: [],
+      changes: [],
       currentIssues: [],
       nextSteps: [
         "fixtures/golden 测试集完善",

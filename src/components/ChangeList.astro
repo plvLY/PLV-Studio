@@ -1,0 +1,72 @@
+---
+import type { ChangeKind, ProgressChange } from "../types";
+import { CHANGE_KIND_META, groupChanges } from "../lib/progress";
+
+interface Props {
+  changes: ProgressChange[];
+  /** full=按类型分组的发布日志；compact=首页摘要（只留前几条） */
+  variant?: "full" | "compact";
+  /** compact 模式下最多显示几条 */
+  limit?: number;
+  class?: string;
+}
+
+const { changes, variant = "full", limit = 3, class: className } = Astro.props;
+
+// 类型色调：颜色只是辅助，标签本身始终可读
+const kindTone: Record<ChangeKind, string> = {
+  feature: "text-primary dark:text-accent",
+  fix: "text-warning",
+  perf: "text-success",
+  docs: "text-text-secondary",
+  chore: "text-text-muted",
+};
+
+const groups = groupChanges(changes);
+const visible = changes.slice(0, limit);
+const remaining = changes.length - visible.length;
+---
+
+{variant === "compact" ? (
+  <div class:list={["min-w-0", className]}>
+    {visible.length > 0 ? (
+      <ul class="flex flex-col gap-1 text-sm text-text-secondary">
+        {visible.map((change) => (
+          <li class="flex min-w-0 items-start gap-1.5">
+            <span class="mt-px shrink-0" aria-hidden="true">{CHANGE_KIND_META[change.kind].emoji}</span>
+            <span class="line-clamp-2">{change.text}</span>
+            <span class="sr-only">（{CHANGE_KIND_META[change.kind].label}）</span>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="text-sm text-text-muted">本阶段尚未记录完成事项</p>
+    )}
+    {remaining > 0 && (
+      <p class="mt-1.5 text-xs text-text-muted">另有 {remaining} 项变更</p>
+    )}
+  </div>
+) : (
+  <div class:list={["space-y-3", className]}>
+    {groups.length > 0 ? (
+      groups.map((group) => (
+        <div class="grid gap-1.5 sm:grid-cols-[6rem_minmax(0,1fr)] sm:gap-x-4">
+          <p class:list={["flex items-center gap-1.5 self-start text-xs font-semibold sm:pt-0.5", kindTone[group.kind]]}>
+            <span aria-hidden="true">{group.meta.emoji}</span>
+            {group.meta.label}
+          </p>
+          <ul class="space-y-1.5">
+            {group.items.map((text) => (
+              <li class="flex items-start gap-2 text-sm leading-relaxed text-text-secondary">
+                <span class="mt-2 h-1 w-1 shrink-0 rounded-full bg-border" aria-hidden="true"></span>
+                <span>{text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))
+    ) : (
+      <p class="text-sm text-text-muted">本阶段尚未记录完成事项</p>
+    )}
+  </div>
+)}

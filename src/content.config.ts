@@ -18,6 +18,8 @@ const works = defineCollection({
     type: z.string(),
     status: z.enum(workStatuses),
     cover: z.string().default(""),
+    /** 封面来源：真实运行截图 或 设计封面（首页/卡片文案据此区分，避免把设计稿写成截图） */
+    coverKind: z.enum(["screenshot", "cover"]).default("cover"),
     icon: z.string().default(""),
     startedAt: isoDate,
     updatedAt: isoDate,
@@ -27,6 +29,14 @@ const works = defineCollection({
     demoUrl: z.string().default(""),
     sourceUrl: z.string().default(""),
     videoUrl: z.string().default(""),
+    // 作品叙事（STAR）：痛点 → 方案 → 价值；只写能与文档/代码对应的事实
+    story: z
+      .object({
+        pain: z.string(),
+        solution: z.string(),
+        value: z.string(),
+      })
+      .optional(),
   }),
 });
 

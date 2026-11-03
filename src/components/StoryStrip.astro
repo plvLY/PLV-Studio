@@ -1,0 +1,89 @@
+---
+import type { WorkStory } from "../types";
+
+interface Props {
+  story: WorkStory;
+}
+
+const { story } = Astro.props;
+
+// 三张卡：痛点（为什么做）→ 方案（怎么做）→ 价值（带来什么）
+// 只写能与站内文档/代码对应的事实，不编造百分比收益。
+const items = [
+  {
+    eyebrow: "Pain",
+    label: "痛点",
+    icon: "alert",
+    tone: "warning",
+    text: story.pain,
+  },
+  {
+    eyebrow: "Solution",
+    label: "方案",
+    icon: "layers",
+    tone: "primary",
+    text: story.solution,
+  },
+  {
+    eyebrow: "Value",
+    label: "价值",
+    icon: "trend",
+    tone: "success",
+    text: story.value,
+  },
+];
+
+const toneClass: Record<string, string> = {
+  warning: "text-warning",
+  primary: "text-primary dark:text-accent",
+  success: "text-success",
+};
+const barClass: Record<string, string> = {
+  warning: "bg-warning/70",
+  primary: "bg-primary dark:bg-accent",
+  success: "bg-success/80",
+};
+---
+
+<section aria-labelledby="story-title" class="mt-8">
+  <h2 id="story-title" class="sr-only">项目叙事：痛点、方案与价值</h2>
+  <div class="grid gap-4 md:grid-cols-3">
+    {items.map((item, index) => (
+      <article class="relative flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface p-5 transition-colors hover:border-primary/30">
+        <span class:list={["absolute inset-x-0 top-0 h-0.5", barClass[item.tone]]} aria-hidden="true"></span>
+
+        <div class="flex items-center justify-between gap-3">
+          <p class:list={["flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em]", toneClass[item.tone]]}>
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              {item.icon === "alert" && (
+                <>
+                  <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <path d="M12 9v4"></path>
+                  <path d="M12 17h.01"></path>
+                </>
+              )}
+              {item.icon === "layers" && (
+                <>
+                  <path d="m12 2 9 5-9 5-9-5 9-5z"></path>
+                  <path d="m3 12 9 5 9-5"></path>
+                  <path d="m3 17 9 5 9-5"></path>
+                </>
+              )}
+              {item.icon === "trend" && (
+                <>
+                  <path d="m3 17 6-6 4 4 8-8"></path>
+                  <path d="M17 7h4v4"></path>
+                </>
+              )}
+            </svg>
+            {item.label}
+            <span class="font-mono text-[10px] font-medium tracking-[0.14em] text-text-muted">{item.eyebrow}</span>
+          </p>
+          <span class="font-mono text-[11px] text-text-muted" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+        </div>
+
+        <p class="mt-3 text-sm leading-relaxed text-text-secondary">{item.text}</p>
+      </article>
+    ))}
+  </div>
+</section>

@@ -48,3 +48,24 @@ export const DOC_TYPE_LABELS: Record<string, string> = {
 export function docTypeLabel(type: string): string {
   return DOC_TYPE_LABELS[type] ?? type;
 }
+
+/** 文档 entry.id 形如 `{作品 slug}/{文档 id}`，统一推导站内地址（带尾斜杠） */
+export function documentHref(docId: string): string {
+  const [workSlug, docSlug] = docId.split("/");
+  return `/works/${workSlug}/documents/${docSlug}/`;
+}
+
+export interface DocumentTypeRef {
+  id: string;
+  data: { type: string; updatedAt: string };
+}
+
+/** 取某类型下最新的公开文档，避免把链接硬编码到具体作品 */
+export function latestDocumentByType<T extends DocumentTypeRef>(
+  docs: T[],
+  type: string,
+): T | undefined {
+  return docs
+    .filter((doc) => doc.data.type === type)
+    .sort((a, b) => b.data.updatedAt.localeCompare(a.data.updatedAt))[0];
+}

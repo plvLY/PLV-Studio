@@ -2,7 +2,7 @@
 import type { CollectionEntry } from "astro:content";
 import WorkStatusBadge from "./WorkStatusBadge.astro";
 import TechStackTags from "./TechStackTags.astro";
-import { publicStatusLabel, workTypeLabel } from "../lib/works";
+import { coverAlt, publicStatusLabel, workTypeLabel } from "../lib/works";
 
 interface Props {
   /** works 集合条目映射为 { slug, ...frontmatter } 后的形状 */
@@ -37,7 +37,7 @@ const statusText = publicStatusLabel(work.status, work.demoUrl);
         >
           <img
             src={work.cover}
-            alt={`${work.title} 运行截图`}
+            alt={coverAlt(work.title, work.coverKind)}
             class:list={[
               "aspect-video w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.01] motion-reduce:transform-none",
               isFeatured && "md:h-full",
@@ -81,9 +81,9 @@ const statusText = publicStatusLabel(work.status, work.demoUrl);
       )}
       <div class="min-w-0">
         <p class="text-xs text-text-muted">{workTypeLabel(work.type)}</p>
-        <h2 class="truncate text-lg font-semibold text-text-primary">
+        <h3 class="truncate text-lg font-semibold text-text-primary">
           <a href={detailHref} class="underline-offset-4 hover:underline">{work.title}</a>
-        </h2>
+        </h3>
       </div>
     </div>
 

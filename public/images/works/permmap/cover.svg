@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="810" viewBox="0 0 1440 810" role="img" aria-label="PLV PermMap 项目封面">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0b1120"/>
+      <stop offset="100%" stop-color="#172033"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#0f766e"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#2dd4bf" stop-opacity="0.9"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1440" height="810" fill="url(#bg)"/>
+
+  <g stroke="rgba(255,255,255,0.045)" stroke-width="1">
+    <line x1="0" y1="135" x2="1440" y2="135"/>
+    <line x1="0" y1="270" x2="1440" y2="270"/>
+    <line x1="0" y1="405" x2="1440" y2="405"/>
+    <line x1="0" y1="540" x2="1440" y2="540"/>
+    <line x1="0" y1="675" x2="1440" y2="675"/>
+    <line x1="240" y1="0" x2="240" y2="810"/>
+    <line x1="480" y1="0" x2="480" y2="810"/>
+    <line x1="720" y1="0" x2="720" y2="810"/>
+    <line x1="960" y1="0" x2="960" y2="810"/>
+    <line x1="1200" y1="0" x2="1200" y2="810"/>
+  </g>
+
+  <text x="140" y="250" font-family="system-ui, sans-serif" font-size="26" font-weight="600" fill="#60a5fa">PLV PermMap</text>
+  <text x="140" y="320" font-family="system-ui, sans-serif" font-size="58" font-weight="700" fill="#f8fafc">可复用的 Java 权限管理</text>
+  <text x="140" y="392" font-family="system-ui, sans-serif" font-size="58" font-weight="700" fill="#f8fafc">与授权调试工具</text>
+  <text x="140" y="458" font-family="system-ui, sans-serif" font-size="22" fill="#94a3b8">权限核心 · Spring Boot Starter · 可视化管理平台</text>
+
+  <g transform="translate(140, 518)">
+    <rect x="0" y="0" width="470" height="40" rx="20" fill="url(#accent)" opacity="0.95"/>
+    <text x="235" y="26" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="#ffffff">领域模型与架构设计完成 · 核心模块进行中</text>
+  </g>
+
+  <text x="140" y="660" font-family="system-ui, sans-serif" font-size="17" fill="#64748b">Java 21 · Spring Boot 3.x · Spring Security · PostgreSQL · Vue 3 · Maven</text>
+
+  <!-- 右侧 RBAC 关系示意：User → Role → Resource -->
+  <g transform="translate(840, 250)">
+    <rect x="0" y="0" width="460" height="330" rx="18" fill="rgba(255,255,255,0.025)" stroke="rgba(255,255,255,0.09)"/>
+
+    <g font-family="system-ui, sans-serif">
+      <rect x="40" y="42" width="140" height="52" rx="12" fill="#111827" stroke="#334155"/>
+      <text x="110" y="74" text-anchor="middle" font-size="19" font-weight="600" fill="#e2e8f0">User</text>
+
+      <rect x="160" y="140" width="140" height="52" rx="12" fill="#111827" stroke="#334155"/>
+      <text x="230" y="172" text-anchor="middle" font-size="19" font-weight="600" fill="#e2e8f0">Role</text>
+
+      <rect x="280" y="238" width="140" height="52" rx="12" fill="#111827" stroke="#334155"/>
+      <text x="350" y="270" text-anchor="middle" font-size="19" font-weight="600" fill="#e2e8f0">Resource</text>
+
+      <path d="M150 94 C210 110 200 130 220 140" stroke="url(#line)" stroke-width="2" fill="none"/>
+      <path d="M270 192 C330 208 310 228 330 238" stroke="url(#line)" stroke-width="2" fill="none"/>
+      <circle cx="150" cy="94" r="3.5" fill="#60a5fa"/>
+      <circle cx="220" cy="140" r="3.5" fill="#60a5fa"/>
+      <circle cx="270" cy="192" r="3.5" fill="#2dd4bf"/>
+      <circle cx="330" cy="238" r="3.5" fill="#2dd4bf"/>
+
+      <text x="236" y="112" font-size="13" fill="#7c8ba1">UserRole</text>
+      <text x="356" y="210" font-size="13" fill="#7c8ba1">RoleResource</text>
+    </g>
+  </g>
+</svg>

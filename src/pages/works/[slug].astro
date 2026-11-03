@@ -5,9 +5,14 @@ import WorkStatusBadge from "../../components/WorkStatusBadge.astro";
 import TechStackTags from "../../components/TechStackTags.astro";
 import DocumentCard from "../../components/DocumentCard.astro";
 import ProgressTimeline from "../../components/ProgressTimeline.astro";
+import StoryStrip from "../../components/StoryStrip.astro";
+import ChangeList from "../../components/ChangeList.astro";
+import ReleaseBadge from "../../components/ReleaseBadge.astro";
 import { getCollection, render, type CollectionEntry } from "astro:content";
 import { sortByLifecycle, docTypeLabel } from "../../lib/documents";
-import { publicStatusLabel, workTypeLabel } from "../../lib/works";
+import { coverAlt, coverCaption, publicStatusLabel, workTypeLabel } from "../../lib/works";
+import { entryChanges } from "../../lib/progress";
+import { extractMermaidBlocks, renderMermaid } from "../../lib/mermaid";
 import { progress } from "../../data/progress";
 
 interface Props {
@@ -33,6 +38,16 @@ const docEntries = await getCollection("documents", ({ id }) => id.startsWith(`$
 const workDocs = sortByLifecycle(docEntries.map((d) => ({ docId: d.id.split("/")[1], ...d.data })));
 const workProgress = progress[slug] ?? [];
 
+// 架构速览：从该作品的技术方案文档中提取第一个 Mermaid 图，构建期渲染为静态图
+const architectureEntry = docEntries.find((doc) => doc.data.type === "architecture");
+const architectureSource = architectureEntry
+  ? extractMermaidBlocks(architectureEntry.body ?? "").find((block) => /^(?:flowchart|graph)\b/im.test(block))
+  : undefined;
+const architectureDiagram = architectureSource ? renderMermaid(architectureSource) : null;
+const architectureHref = architectureEntry
+  ? `/works/${slug}/documents/${architectureEntry.id.split("/")[1]}/`
+  : undefined;
+
 // 验收与发布：只展示真实进度数据中存在的阶段，不另造一份验收结论
 const releaseEntries = workProgress.filter((item) =>
   ["测试验收", "发布部署", "发布迭代"].includes(item.stage),
@@ -50,12 +65,17 @@ const externalLinks = [
   { url: work.videoUrl, label: "演示视频", hint: "视频" },
 ].filter((link) => link.url);
 
+// 页面章节由实际内容决定（没有架构图的作品不会出现空章节），编号随之推导；
+// 架构速览放在概览之前：先给可视化骨架，再进入长文细节。
 const pageSections = [
+  ...(architectureDiagram ? [{ id: "architecture", label: "架构与流程" }] : []),
   { id: "overview", label: "项目概览" },
   { id: "documents", label: "设计文档" },
-  { id: "progress", label: "开发进度" },
+  { id: "progress", label: "开发与发布" },
   { id: "release", label: "验收与上线" },
 ];
+const sectionIndex = (sectionId: string) =>
+  String(pageSections.findIndex((section) => section.id === sectionId) + 1).padStart(2, "0");
 
 const description = `${work.title}：${work.summary}`;
 ---
@@ -100,7 +120,9 @@ const description = `${work.title}：${work.summary}`;
               <span class="sr-only">（在新标签页打开）</span>
             </a>
           )}
-          <a href="#documents" class="btn btn-secondary">阅读设计文档</a>
+          {workDocs.length > 0 && (
+            <a href="#documents" class="btn btn-secondary">阅读设计文档</a>
+          )}
           <a href="#progress" class="btn btn-ghost">查看开发记录</a>
         </div>
 
@@ -137,7 +159,7 @@ const description = `${work.title}：${work.summary}`;
           >
             <img
               src={work.cover}
-              alt={`${work.title} 首页运行截图`}
+              alt={coverAlt(work.title, work.coverKind)}
               width="1440"
               height="810"
               class="aspect-video w-full rounded-lg object-cover object-top transition-transform duration-300 group-hover:scale-[1.01] motion-reduce:transform-none"
@@ -147,12 +169,14 @@ const description = `${work.title}：${work.summary}`;
             />
           </a>
           <figcaption class="mt-2.5 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-text-secondary">
-            <span>真实运行截图 · 首页</span>
+            <span>{coverCaption(work.coverKind)}</span>
             <span>开始于 <time datetime={work.startedAt}>{work.startedAt}</time></span>
           </figcaption>
         </figure>
       )}
     </header>
+
+    {work.story && <StoryStrip story={work.story} />}
 
     <!-- 移动端目录：避免长页面只能依赖浏览器返回 -->
     <details class="surface-card mt-8 p-4 lg:hidden">
@@ -169,11 +193,38 @@ const description = `${work.title}：${work.summary}`;
     </details>
 
     <div class="mt-10 grid gap-10 lg:grid-cols-12 lg:gap-12">
-      <!-- 主内容：概览 → 文档 → 进度 → 验收发布 -->
+      <!-- 主内容：架构速览 → 概览 → 文档 → 发布记录 → 验收发布 -->
       <div class="min-w-0 space-y-12 lg:col-span-8">
+        <!-- 架构速览：把技术方案里的 Mermaid 图提到项目页，访客不必先下载代码 -->
+        {architectureDiagram && (
+          <section id="architecture" aria-labelledby="architecture-title" class="scroll-mt-24">
+            <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-border pb-3">
+              <div class="flex items-baseline gap-3">
+                <span class="text-xs font-semibold tabular-nums text-text-muted" aria-hidden="true">{sectionIndex("architecture")}</span>
+                <h2 id="architecture-title" class="text-xl font-bold text-text-primary">架构与流程</h2>
+              </div>
+              <p class="text-xs text-text-muted">来自技术方案 · 静态渲染</p>
+            </div>
+
+            <div class="diagram-embed mt-6" set:html={architectureDiagram.html} />
+
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+              <p class="text-xs leading-relaxed text-text-muted">
+                图由 Markdown 中的 Mermaid 源码在构建期渲染为 SVG，不使用客户端图表库。
+              </p>
+              {architectureHref && (
+                <a href={architectureHref} class="text-link shrink-0">
+                  查看技术方案全文
+                  <span aria-hidden="true">→</span>
+                </a>
+              )}
+            </div>
+          </section>
+        )}
+
         <section id="overview" aria-labelledby="overview-title" class="scroll-mt-24">
           <div class="flex items-baseline gap-3 border-b border-border pb-3">
-            <span class="text-xs font-semibold tabular-nums text-text-muted" aria-hidden="true">01</span>
+            <span class="text-xs font-semibold tabular-nums text-text-muted" aria-hidden="true">{sectionIndex("overview")}</span>
             <h2 id="overview-title" class="text-xl font-bold text-text-primary">项目概览</h2>
           </div>
           <div class="content-body content-body--compact mt-6">
@@ -184,7 +235,7 @@ const description = `${work.title}：${work.summary}`;
         <section id="documents" aria-labelledby="documents-title" class="scroll-mt-24">
           <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-border pb-3">
             <div class="flex items-baseline gap-3">
-              <span class="text-xs font-semibold tabular-nums text-text-muted" aria-hidden="true">02</span>
+              <span class="text-xs font-semibold tabular-nums text-text-muted" aria-hidden="true">{sectionIndex("documents")}</span>
               <h2 id="documents-title" class="text-xl font-bold text-text-primary">设计文档</h2>
             </div>
             <p class="text-xs text-text-muted">按开发节点排序 · 共 {workDocs.length} 份</p>
@@ -207,22 +258,24 @@ const description = `${work.title}：${work.summary}`;
             测试验收与发布记录见下方开发进度；复盘文档尚未单独发布，不以空文档占位。
           </p>
 
-          <a href={`/works/${slug}/documents/`} class="text-link mt-4">
-            查看完整文档列表
-            <span aria-hidden="true">→</span>
-          </a>
+          {workDocs.length > 0 && (
+            <a href={`/works/${slug}/documents/`} class="text-link mt-4">
+              查看完整文档列表
+              <span aria-hidden="true">→</span>
+            </a>
+          )}
         </section>
 
         <ProgressTimeline
           entries={workProgress}
-          index="03"
-          description="按实际更新时间记录每个阶段的完成事项、当前问题与下一步；这是项目状态，不是通用流程。"
+          index={sectionIndex("progress")}
+          description="按实际更新时间记录每个阶段的变更、当前问题与下一步；这是项目状态，不是通用流程。"
         />
 
         <section id="release" aria-labelledby="release-title" class="scroll-mt-24">
           <div class="flex flex-wrap items-baseline justify-between gap-3 border-b border-border pb-3">
             <div class="flex items-baseline gap-3">
-              <span class="text-xs font-semibold tabular-nums text-text-muted" aria-hidden="true">04</span>
+              <span class="text-xs font-semibold tabular-nums text-text-muted" aria-hidden="true">{sectionIndex("release")}</span>
               <h2 id="release-title" class="text-xl font-bold text-text-primary">验收与上线</h2>
             </div>
             <p class="text-xs text-text-muted">来源：开发记录</p>
@@ -233,17 +286,13 @@ const description = `${work.title}：${work.summary}`;
               {releaseEntries.map((item) => (
                 <article class="surface-card flex h-full flex-col p-5">
                   <div class="flex flex-wrap items-center justify-between gap-2">
-                    <h3 class="font-semibold text-text-primary">{item.stage}</h3>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <h3 class="font-semibold text-text-primary">{item.stage}</h3>
+                      <ReleaseBadge status={item.status} />
+                    </div>
                     <time datetime={item.updatedAt} class="text-xs tabular-nums text-text-muted">{item.updatedAt}</time>
                   </div>
-                  <ul class="mt-3 space-y-2 text-sm text-text-secondary">
-                    {item.completedItems.map((completed) => (
-                      <li class="flex items-start gap-2">
-                        <span class="mt-2 h-1 w-1 shrink-0 rounded-full bg-success" aria-hidden="true"></span>
-                        <span>{completed}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <ChangeList changes={entryChanges(item)} class="mt-3" />
                 </article>
               ))}
             </div>

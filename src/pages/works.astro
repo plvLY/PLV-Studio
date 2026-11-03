@@ -13,7 +13,9 @@ const publishedWorks = (await getCollection("works", ({ data }) => data.publishe
 const publishedSlugs = new Set(publishedWorks.map((work) => work.slug));
 
 const docEntries = await getCollection("documents");
-const docCount = docEntries.filter((doc) => publishedSlugs.has(doc.id.split("/")[0])).length;
+const publishedDocs = docEntries.filter((doc) => publishedSlugs.has(doc.id.split("/")[0]));
+const docCount = publishedDocs.length;
+const slugsWithDocs = new Set(publishedDocs.map((doc) => doc.id.split("/")[0]));
 const progressCount = publishedWorks.reduce(
   (total, work) => total + (progress[work.slug]?.length ?? 0),
   0,
@@ -32,9 +34,14 @@ const onlineCount = publishedWorks.filter(
 // 作品较少时用横版卡片（封面在左、文字在右）压低视觉占比；作品多了切回两列纵版网格
 const useHorizontal = publishedWorks.length > 0 && publishedWorks.length <= 2;
 
-const featuredWork = publishedWorks.find((work) => work.featured) ?? publishedWorks[0];
+const featuredWork =
+  publishedWorks.find((work) => work.featured && work.demoUrl) ??
+  publishedWorks.find((work) => work.featured && slugsWithDocs.has(work.slug)) ??
+  publishedWorks.find((work) => work.featured) ??
+  publishedWorks[0];
 const featuredHref = featuredWork ? `/works/${featuredWork.slug}/` : "/works/";
-const documentsHref = featuredWork ? `${featuredHref}documents/` : "/works/";
+const documentsHref =
+  featuredWork && slugsWithDocs.has(featuredWork.slug) ? `${featuredHref}documents/` : "/works/";
 
 const recordItems = [
   {
@@ -57,7 +64,7 @@ const recordItems = [
   },
 ];
 
-const description = `浏览 PLV Studio 的公开作品：${publishedWorks.map((work) => work.title).join("、") || "暂无作品"}。每个作品包含设计文档、开发进度与可核验的外部入口。`;
+const description = `浏览 PLV Studio 的公开作品：${publishedWorks.map((work) => work.title).join("、") || "暂无作品"}。每个作品包含设计文档、开发与发布记录以及可核验的外部入口。`;
 ---
 
 <Layout title="作品集" description={description}>

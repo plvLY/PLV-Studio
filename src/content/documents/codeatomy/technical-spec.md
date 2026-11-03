@@ -2,7 +2,7 @@
 title: "技术方案"
 type: "architecture"
 version: "v0.1"
-updatedAt: "2026-10-29"
+updatedAt: "2026-11-04"
 summary: "PLV Codeatomy v0.1 技术架构与实现方案，涵盖领域模型、扫描流程、查询算法与存储设计。"
 ---
 
@@ -20,7 +20,8 @@ PLV Codeatomy 采用**索引一次，查询多次**的设计模式，通过静�
 ### 1.2 架构图
 
 ```mermaid
-flowchart LR
+%% caption: 扫描一次生成索引，查询阶段只读索引，再分别输出到 CLI / 报告 / MCP
+flowchart TD
     A[Java 仓库] --> B[Scanner]
     B --> C[Maven Module Resolver]
     B --> D[Classpath Resolver]
@@ -73,6 +74,7 @@ discover → modules → classpath → spoon → extract → write → summary
 ### 3.1 实体关系
 
 ```mermaid
+%% caption: 索引中的核心实体关系（Mermaid erDiagram 语法）
 erDiagram
     PROJECT ||--o{ MODULE : contains
     MODULE ||--o{ SOURCE_FILE : contains

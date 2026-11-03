@@ -13,6 +13,10 @@ featured: true
 demoUrl: ""
 sourceUrl: "https://github.com/plvLY/PLV-Codeatomy"
 videoUrl: ""
+story:
+  pain: "多模块 Java 项目动辄几十个模块，接手时要靠全局搜索和断点才能拼出调用链；AI 编程也只拿到零散文件，改动的真实影响面说不清。"
+  solution: "用 Spoon 做静态分析，扫描一次生成 SQLite 索引：模块、入口、调用边、Bean 注入、AOP、配置与 SQL 关联起来，CLI、报告与 MCP Server 共用同一份索引。"
+  value: "把「读代码猜流程」变成可核查的索引：每条边都能回到 file:line，无法解析的项 100% 可见，人和 AI 都能据此判断改动的上下游。"
 ---
 
 ## 1. 项目概述

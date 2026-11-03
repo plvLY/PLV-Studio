@@ -1,8 +1,8 @@
 ---
 title: "技术架构"
 type: "architecture"
-version: "v1.0"
-updatedAt: "2026-10-25"
+version: "v1.1"
+updatedAt: "2026-11-04"
 summary: "技术选型理由、系统分层、设计令牌体系、路由渲染与构建部署方案"
 ---
 
@@ -13,6 +13,7 @@ summary: "技术选型理由、系统分层、设计令牌体系、路由渲染�
 | 领域 | 选型 | 版本 | 理由 |
 | --- | --- | --- | --- |
 | 静态站点框架 | Astro | ^7.4.0 | 静态生成优先、默认零客户端 JS、内建 Content Collections；是全站唯一的运行时依赖 |
+| Markdown 处理 | @astrojs/markdown-satteri | 0.4.4 | Astro 7 默认处理器；通过 mdast 插件把 Mermaid 代码块在构建期渲染为静态 SVG |
 | 样式方案 | Tailwind CSS | ^4.3.3 | 经 `@tailwindcss/vite` 以 Vite 插件方式接入；`@astrojs/tailwind` 集成包已停止维护且不支持 Astro 7（peer 冲突），因此不使用 |
 | 语言 | TypeScript | ^5.9.3 | 配合 `astro check` 做全站类型检查（当前零错误） |
 | 部署 | Netlify | — | 纯静态产物 `dist/`，`netlify.toml` 锁定 Node 22 |
@@ -20,9 +21,10 @@ summary: "技术选型理由、系统分层、设计令牌体系、路由渲染�
 ### 1.2 关键取舍
 
 - **纯静态、无后端**：站点没有需要服务端处理的用户操作，静态生成即可满足，避免引入数据库与服务端复杂度。
-- **零客户端框架**：不引入 React / Vue 等客户端框架；自有页面脚本仅主题切换与移动菜单两段原生 JS，另有 Cloudflare Web Analytics 统计 beacon（生产构建注入，非功能依赖），页面在无 JS 环境下完整可用。
+- **零客户端框架**：不引入 React / Vue 等客户端框架；自有页面脚本仅主题切换、移动菜单与能力标签页三段原生 JS，另有 Cloudflare Web Analytics 统计 beacon（生产构建注入，非功能依赖），页面在无 JS 环境下完整可用。
+- **构建期图表**：文档里的 Mermaid 代码块由自研 mdast 插件在构建期渲染为静态 SVG（支持 flowchart / erDiagram 子集），不引入客户端图表库，图随主题变量换色。
 - **纯 Markdown 而非 MDX**：文档只需排版展示、无需在正文嵌入交互组件，因此不引入 `@astrojs/mdx` 依赖与编译成本。
-- **混合内容方案**：长文内容（作品、设计文档）走 Content Collections，构建期用 Zod 校验 frontmatter；跨文件引用的结构化数据（开发进度、技术方向）保留 TS 模块，维持类型检查能力。
+- **混合内容方案**：长文内容（作品、设计文档）走 Content Collections，构建期用 Zod 校验 frontmatter；跨文件引用的结构化数据（开发与发布记录、技术方向）保留 TS 模块，维持类型检查能力。
 
 ## 2. 系统分层与数据流
 
@@ -32,8 +34,8 @@ summary: "技术选型理由、系统分层、设计令牌体系、路由渲染�
   │    ├─ works/*.md              作品（frontmatter 元数据 + Markdown 正文）
   │    └─ documents/{slug}/*.md   设计文档（entry.id 形如 plv-studio/requirements）
   └─ TS 数据模块（src/data/）
-       ├─ progress.ts             开发进度时间线
-       └─ skills.ts               技术方向（可选关联作品 slug）
+       ├─ progress.ts             开发与发布记录（changes 按类型分组）
+       └─ skills.ts               技术方向（milestones 实现脉络 + evidence）
 
 路由层（src/pages/，全部静态生成）
   ├─ index.astro                     首页
@@ -47,10 +49,13 @@ summary: "技术选型理由、系统分层、设计令牌体系、路由渲染�
 
 展示层（src/layouts/ + src/components/）
   Layout（meta、主题内联脚本、页头页脚）+
-  WorkCard / FeaturedWorkCard / DocumentCard / ProgressTimeline /
+  CapabilityExplorer / WorkCarousel / StoryStrip / ChangeList / ReleaseBadge /
+  VisitorRouter / WorkCard / FeaturedWorkCard / DocumentCard / ProgressTimeline /
   WorkStatusBadge / TechStackTags / PageHeader / Breadcrumbs / ProjectToc /
-  SectionHeading / SkillCard
-数据与工具（src/lib/）：works.ts（类型/状态文案）、documents.ts（生命周期排序）、progress.ts（最近进度）
+  SectionHeading / ThemeToggle
+数据与工具（src/lib/）：works.ts（状态文案）、documents.ts（生命周期排序与文档地址）、
+  progress.ts（最近更新、变更分组与发布状态）、mermaid.ts（构建期图表渲染）、
+  markdown-mermaid.ts（Sätteri mdast 插件）
 ```
 
 数据流：构建时 `getCollection()` 查询集合，页面将其映射为视图模型后交给组件渲染为静态 HTML；运行时没有任何 JS 数据请求。状态徽标、日期与作品名称全部来自统一数据源，页面之间不会各自维护一份数据。首页、「关于」与作品详情共用 `skills.ts`、`progress.ts` 与作品 frontmatter，能力证据不会在多个页面出现不同版本。
@@ -70,11 +75,12 @@ summary: "技术选型理由、系统分层、设计令牌体系、路由渲染�
 - `trailingSlash: 'always'`：全部内部链接以 `/` 结尾，与构建产物目录结构一致。
 - 路由由集合驱动：`getStaticPaths()` 从 `getCollection()` 生成；作品 URL 由文件名决定，文档 URL 由「作品目录 / 文档文件名」决定，避免数据与路由漂移。
 - Markdown 正文经 `render(entry)` 得到 `<Content />` 组件，包裹在 `.content-body` 中统一排版；标题自动生成 `id` 锚点。
+- Mermaid 代码块在构建期由 Sätteri mdast 插件替换为静态 HTML（SVG / 关系卡），产物零运行时依赖；无法识别的语法会原样保留代码块。
 - 状态枚举单一来源：`src/types.ts` 的 `WORK_STATUSES` 同时被 Zod schema 与组件复用。
 
 ## 5. 构建与部署
 
-- `npm run build`：`astro build` 生成纯静态产物到 `dist/`。当前产物包含 9 个 HTML 页面（首页、作品列表、作品详情、文档列表、3 篇文档、关于、404）以及 `sitemap.xml`。
+- `npm run build`：`astro build` 生成纯静态产物到 `dist/`。当前产物包含 14 个 HTML 页面（首页、作品列表、3 个作品详情、2 个文档列表、5 篇文档、关于、404）以及 `sitemap.xml`。
 - `npm run check`：`@astrojs/check` 全站类型检查，作为变更前的验证门槛。
 - Netlify：`netlify.toml` 指定构建命令与产物目录，`NODE_VERSION = 22`；`package.json` 的 `engines` 要求 Node ≥ 22.22，保证本地与构建环境一致。
 - 正式域名：`site` 配置为 `https://plvstudio.netlify.app`，canonical / OG 元信息按此生成绝对地址。

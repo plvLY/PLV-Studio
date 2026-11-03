@@ -31,3 +31,12 @@ export function publicStatusLabel(status: WorkStatus, demoUrl = ""): string {
   if (status === "completed" && demoUrl) return "已上线";
   return STATUS_LABELS[status] ?? "未知";
 }
+
+/** 封面来源标签：设计封面不能被写成「真实运行截图」 */
+export function coverAlt(title: string, coverKind = "cover"): string {
+  return coverKind === "screenshot" ? `${title} 首页运行截图` : `${title} 项目封面`;
+}
+
+export function coverCaption(coverKind = "cover"): string {
+  return coverKind === "screenshot" ? "真实运行截图 · 首页" : "项目封面";
+}
